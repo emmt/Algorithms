@@ -85,25 +85,22 @@ int cobyla(INTEGER n, INTEGER m, cobyla_calcfc* calcfc, void* calcfc_data,
            REAL x[], REAL rhobeg, REAL rhoend, INTEGER iprint,
            INTEGER* maxfun, REAL w[], INTEGER iact[])
 {
-  INTEGER iwork, idx, isigb, iveta, ivsig, ia, idatm, isimi, isim, icon, mpp;
-
   /* Partition the working space array W to provide the storage that is needed
     for the main calculation. */
-  mpp = m + 2;
-  icon = 0; /* C indices start at 0 */
-  isim = icon + mpp;
-  isimi = isim + n*n + n;
-  idatm = isimi + n*n;
-  ia = idatm + n*mpp + mpp;
-  ivsig = ia + m*n + n;
-  iveta = ivsig + n;
-  isigb = iveta + n;
-  idx = isigb + n;
-  iwork = idx + n;
+  INTEGER mpp = m + 2;
+  REAL* con = w;
+  REAL* sim = con + mpp;
+  REAL* simi = sim + n*n + n;
+  REAL* datm = simi + n*n;
+  REAL* a = datm + n*mpp + mpp;
+  REAL* vsig = a + m*n + n;
+  REAL* veta = vsig + n;
+  REAL* sigb = veta + n;
+  REAL* dx = sigb + n;
+  REAL* work = dx + n;
   return cobylb(n, m, mpp, calcfc, calcfc_data, x, rhobeg, rhoend, iprint,
-                maxfun,
-                &w[icon], &w[isim], &w[isimi], &w[idatm], &w[ia],
-                &w[ivsig], &w[iveta], &w[isigb], &w[idx], &w[iwork],iact);
+                maxfun, con, sim, simi, datm, a, vsig, veta, sigb, dx, work,
+                iact);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -162,13 +159,14 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
   const REAL gamma = FLT(0.5);
   const REAL delta = FLT(1.1);
 
-  /* Local variables. */
-  REAL barmu, cmax, cmin, cvmaxm, cvmaxp, denom, dxsign,
-    edgmax, error, f, pareta, parmu, parsig, phi, phimin, prerec,
-    prerem, ratio, resmax, resnew, rho, sum, temp, tempa, trured, vmnew,
-    vmold, weta, wsig;
-  INTEGER i, j, k, l, ibrnch, idxnew, iflag, ifull, isdirn, ivmc, ivmd, iz,
-    izdota, jdrop, mp, nbest, nfvals, np;
+  /* Local variables (for each type, real or integer, the first group of
+     variables are those which must be preserved between calls in a reverse
+     communication version of the algorithm). */
+  REAL f, parmu, parsig, prerec, prerem, resmax, rho;
+  REAL barmu, cvmaxm, cvmaxp, dxsign, edgmax, error, pareta, phi, phimin,
+    ratio, resnew, sum, temp, tempa, trured, vmnew, vmold;
+  INTEGER ibrnch, iflag, ifull, jdrop, nfvals;
+  INTEGER i, j, k, l, mp, np, nbest;
   int status = COBYLA_SUCCESS;
 
   /* Set the initial values of some parameters.  The last column of SIM holds
@@ -345,8 +343,8 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
   parsig = alpha*rho;
   pareta = beta*rho;
   LOOP(j,n) {
-    wsig = zero;
-    weta = zero;
+    REAL wsig = zero;
+    REAL weta = zero;
     LOOP(i,n) {
       wsig += SIMI(j,i)*SIMI(j,i);
       weta += SIM(i,j)*SIM(i,j);
@@ -428,14 +426,16 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
   /* Calculate DX = X(*) - X(0).  Branch if the length of DX is less than
      0.5*RHO. */
  L_370:
-  iz = 1;
-  izdota = iz + n*n;
-  ivmc = izdota + n;
-  isdirn = ivmc + mp;
-  idxnew = isdirn + n;
-  ivmd = idxnew + n;
-  trstlp(n, m, a, con, rho, dx, &ifull, iact, &W(iz), &W(izdota),
-	 &W(ivmc), &W(isdirn), &W(idxnew), &W(ivmd));
+  {
+    REAL* z = w;
+    REAL* zdota = z + n*n;
+    REAL* vmc = zdota + n;
+    REAL* sdirn = vmc + mp;
+    REAL* dxnew = sdirn + n;
+    REAL* vmd = dxnew + n;
+    trstlp(n, m, a, con, rho, dx, &ifull, iact, z, zdota,
+           vmc, sdirn, dxnew, vmd);
+  }
   if (ifull == 0) {
     temp = zero;
     LOOP(i,n) {
@@ -577,6 +577,7 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     rho = FLT(0.5)*rho;
     if (rho <= FLT(1.5)*rhoend) rho = rhoend;
     if (parmu > zero) {
+      REAL cmin, cmax, denom;
       denom = zero;
       LOOP(k,mp) {
 	cmax = cmin = DATMAT(k,np);
