@@ -11,11 +11,14 @@ NAME3 = ${NAME}-revcom
 CC = gcc
 FC = gfortran
 
-CFLAGS = -Wall -O2 -I.
+CFLAGS = -Wall -O2 -I. -DNDEBUG
 FFLAGS = ${CFLAGS}
 
-TESTING_SINGLE_FLAGS = ${CFLAGS} -UNDEBUG -DTESTING -DSINGLE_PRECISION
-TESTING_DOUBLE_FLAGS = ${CFLAGS} -UNDEBUG -DTESTING -USINGLE_PRECISION
+SINGLE_FLAGS = ${CFLAGS} -DSINGLE_PRECISION
+DOUBLE_FLAGS = ${CFLAGS} -USINGLE_PRECISION
+
+TESTING_SINGLE_FLAGS = ${SINGLE_FLAGS} -DTESTING
+TESTING_DOUBLE_FLAGS = ${DOUBLE_FLAGS} -DTESTING
 
 REVCOM = -DREVCOM
 
@@ -90,6 +93,8 @@ test-single: ${NAME}-single.out ${NAME0}-single.out
 	    echo "test-single failed (see file ${NAME}-single.diff)"; \
 	fi
 
+cobyla.o: ${srcdir}/cobyla.c ${srcdir}/cobyla.h
+	${CC} ${CFLAGS} -c $< -o $@
 
 ### Reverse communication version.
 
