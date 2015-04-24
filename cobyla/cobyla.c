@@ -1958,7 +1958,7 @@ main(void)
 {
   REAL r1, rhobeg, rhoend, temp, tempa, tempb, tempc, tempd;
   REAL x[10], xopt[10];
-  INTEGER i, m, n, i1, icase, maxfun, iprint;
+  INTEGER i, m, n, icase, maxfun, iprint;
 #ifndef TESTING_REVCOM
   REAL w[3000];
   INTEGER iact[51];
@@ -1993,8 +1993,8 @@ main(void)
       PRT("Output from test problem 3 (3D ellipsoid calculation)");
       n = 3;
       m = 1;
-      xopt[0] = 1.0 / SQRT(3.0);
-      xopt[1] = 1.0 / SQRT(6.0);
+      xopt[0] = 1.0/SQRT(3.0);
+      xopt[1] = 1.0/SQRT(6.0);
       xopt[2] = -0.33333333333333331;
       break;
 
@@ -2081,8 +2081,7 @@ main(void)
 #  undef PRT
 
     for (icase = 1; icase <= 2; ++icase) {
-      i1 = n;
-      for (i = 1; i <= i1; ++i) {
+      for (i = 1; i <= n; ++i) {
         x[i - 1] = 1.0;
       }
       rhobeg = 0.5;
@@ -2099,21 +2098,20 @@ main(void)
       if (nprob == 10) {
         tempa = x[0] + x[2] + x[4] + x[6];
         tempb = x[1] + x[3] + x[5] + x[7];
-        tempc = 0.5 / SQRT(tempa * tempa + tempb * tempb);
-        tempd = tempc * SQRT(3.0);
-        xopt[0] = tempd * tempa + tempc * tempb;
-        xopt[1] = tempd * tempb - tempc * tempa;
-        xopt[2] = tempd * tempa - tempc * tempb;
-        xopt[3] = tempd * tempb + tempc * tempa;
+        tempc = 0.5/SQRT(tempa*tempa + tempb*tempb);
+        tempd = tempc*SQRT(3.0);
+        xopt[0] = tempd*tempa + tempc*tempb;
+        xopt[1] = tempd*tempb - tempc*tempa;
+        xopt[2] = tempd*tempa - tempc*tempb;
+        xopt[3] = tempd*tempb + tempc*tempa;
         for (i = 1; i <= 4; ++i) {
           xopt[i + 3] = xopt[i - 1];
         }
       }
       temp = 0.0;
-      i1 = n;
-      for (i = 1; i <= i1; ++i) {
+      for (i = 1; i <= n; ++i) {
         r1 = x[i - 1] - xopt[i - 1];
-        temp += r1 * r1;
+        temp += r1*r1;
       }
       fprintf(stdout, "\n     Least squares error in variables =%16.6E\n",
               (double)SQRT(temp));
