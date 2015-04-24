@@ -161,7 +161,7 @@ typedef struct _cobyla_context cobyla_context_t;
    }
    cobyla_delete(ws);
    if (status != COBYLA_SUCCESS) {
-     fprintf(stderr, "Something work occured in COBYLA: %s\n",
+     fprintf(stderr, "Something wrong occured in COBYLA: %s\n",
              cobyla_reason(status));
    }
    ```
