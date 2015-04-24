@@ -3,10 +3,6 @@
 srcdir=.
 TMPDIR = /tmp
 NAME = cobyla
-NAME0 = ${NAME}-orig
-NAME1 = ${NAME}-f2c
-NAME2 = ${NAME}-fwrap
-NAME3 = ${NAME}-revcom
 
 CC = gcc
 FC = gfortran
@@ -14,11 +10,8 @@ FC = gfortran
 CFLAGS = -Wall -O2 -I. -DNDEBUG
 FFLAGS = ${CFLAGS}
 
-SINGLE_FLAGS = ${CFLAGS} -DSINGLE_PRECISION
-DOUBLE_FLAGS = ${CFLAGS} -USINGLE_PRECISION
-
-TESTING_SINGLE_FLAGS = ${SINGLE_FLAGS} -DTESTING
-TESTING_DOUBLE_FLAGS = ${DOUBLE_FLAGS} -DTESTING
+SINGLE = -DSINGLE_PRECISION
+DOUBLE = -USINGLE_PRECISION
 
 REVCOM = -DREVCOM
 
@@ -27,9 +20,10 @@ default: test
 clean:
 	rm -f *~ *.o *.diff
 	rm -f ${NAME}-double ${NAME}-single
-	rm -f ${NAME0}-double ${NAME0}-single
-	rm -f ${NAME1}-double ${NAME1}-single
-	rm -f ${NAME3}-double ${NAME3}-single
+	rm -f ${NAME}-orig-double ${NAME}-orig-single
+	rm -f ${NAME}-f2c-double ${NAME}-f2c-single
+	rm -f ${NAME}-fwrap-double ${NAME}-fwrap-single
+	rm -f ${NAME}-revcom-double ${NAME}-revcom-single
 
 
 # Rule to produce output of tests.
@@ -38,56 +32,58 @@ clean:
 
 # ### Original FORTRAN code.
 #
-# ${NAME0}-double: ${srcdir}/${NAME}.f
+# ${NAME}-orig-double: ${srcdir}/${NAME}.f
 #  	${FC} ${FFLAGS} $< -o $@ -lm
 #
-# ${NAME0}-single: ${srcdir}/orig/${NAME}.f
+# ${NAME}-orig-single: ${srcdir}/orig/${NAME}.f
 #  	${FC} ${FFLAGS} $< -o $@ -lm
 #
 
 ### Conversion with F2C.
 
-${NAME1}-double.c: ${srcdir}/${NAME}.f
+${NAME}-f2c-double.c: ${srcdir}/${NAME}.f
 	rm -f ${TMPDIR}/${NAME}.c
 	f2c -Aas -d${TMPDIR} $<
 	cp -a ${TMPDIR}/${NAME}.c $@
 
-${NAME1}-single.c: ${srcdir}/orig/${NAME}.f
+${NAME}-f2c-single.c: ${srcdir}/orig/${NAME}.f
 	rm -f ${TMPDIR}/${NAME}.c
 	f2c -Aas -d${TMPDIR} $<
 	cp -a ${TMPDIR}/${NAME}.c $@
 
-${NAME1}-double: ${srcdir}/${NAME1}-double.c
+${NAME}-f2c-double: ${srcdir}/${NAME}-f2c-double.c
 	${CC} ${CFLAGS} $< -o $@ -lf2c -lm
 
-${NAME1}-single: ${srcdir}/${NAME1}-single.c
+${NAME}-f2c-single: ${srcdir}/${NAME}-f2c-single.c
 	${CC} ${CFLAGS} $< -o $@ -lf2c -lm
 
-${NAME1}-double.out: ${NAME1}-double
+${NAME}-f2c-double.out: ${NAME}-f2c-double
 	./$< > $@
 
-${NAME1}-single.out: ${NAME1}-single
+${NAME}-f2c-single.out: ${NAME}-f2c-single
 	./$< > $@
 
 ### Conversion and optimizations by hand.
 
 ${NAME}-double: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
-	${CC} ${TESTING_DOUBLE_FLAGS} $< -o $@ -lm
+	${CC} ${CFLAGS} ${DOUBLE} -DTESTING $< -o $@ -lm
 
 ${NAME}-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
-	${CC} ${TESTING_SINGLE_FLAGS} $< -o $@ -lm
+	${CC} ${CFLAGS} ${SINGLE} -DTESTING $< -o $@ -lm
 
 test: test-double test-single
 
-test-double: ${NAME}-double.out ${NAME0}-double.out
-	@if diff ${NAME0}-double.out ${NAME}-double.out >${NAME}-double.diff; then \
+test-double: ${NAME}-double.out ${NAME}-orig-double.out
+	@if diff ${NAME}-orig-double.out ${NAME}-double.out \
+	    >${NAME}-double.diff; then \
 	    echo "test-double successful"; \
 	else \
 	    echo "test-double failed (see file ${NAME}-double.diff)"; \
 	fi
 
-test-single: ${NAME}-single.out ${NAME0}-single.out
-	@if diff ${NAME0}-single.out ${NAME}-single.out >${NAME}-single.diff; then \
+test-single: ${NAME}-single.out ${NAME}-orig-single.out
+	@if diff ${NAME}-orig-single.out ${NAME}-single.out \
+	    >${NAME}-single.diff; then \
 	    echo "test-single successful"; \
 	else \
 	    echo "test-single failed (see file ${NAME}-single.diff)"; \
@@ -98,8 +94,52 @@ cobyla.o: ${srcdir}/cobyla.c ${srcdir}/cobyla.h
 
 ### Reverse communication version.
 
-${NAME3}-double: ${srcdir}/${NAME3}.c
-	${CC} ${TESTING_DOUBLE_FLAGS} ${REVCOM} $< -o $@ -lm
+${NAME}-revcom-double: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
+	${CC} ${CFLAGS} ${DOUBLE} -DTESTING_REVCOM $< -o $@ -lm
 
-${NAME3}-single: ${srcdir}/${NAME3}.c
-	${CC} ${TESTING_SINGLE_FLAGS} ${REVCOM} $< -o $@ -lm
+${NAME}-revcom-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
+	${CC} ${CFLAGS} ${SINGLE} -DTESTING_REVCOM $< -o $@ -lm
+
+test-revcom: test-revcom-double test-revcom-single
+
+test-revcom-double: ${NAME}-revcom-double.out ${NAME}-orig-double.out
+	@if diff ${NAME}-orig-double.out ${NAME}-revcom-double.out \
+	    >${NAME}-revcom-double.diff; then \
+	    echo "test-double successful"; \
+	else \
+	    echo "test-double failed (see file ${NAME}-revcom-double.diff)"; \
+	fi
+
+test-revcom-single: ${NAME}-revcom-single.out ${NAME}-orig-single.out
+	@if diff ${NAME}-orig-single.out ${NAME}-revcom-single.out \
+	    >${NAME}-revcom-single.diff; then \
+	    echo "test-single successful"; \
+	else \
+	    echo "test-single failed (see file ${NAME}-revcom-single.diff)"; \
+	fi
+
+### FORTRAN wrapper.
+
+${NAME}-fwrap-double: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
+	${CC} ${CFLAGS} ${DOUBLE} -DTESTING_FWRAP $< -o $@ -lm
+
+${NAME}-fwrap-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
+	${CC} ${CFLAGS} ${SINGLE} -DTESTING_FWRAP $< -o $@ -lm
+
+test-fwrap: test-fwrap-double test-fwrap-single
+
+test-fwrap-double: ${NAME}-fwrap-double.out ${NAME}-orig-double.out
+	@if diff ${NAME}-orig-double.out ${NAME}-fwrap-double.out \
+	    >${NAME}-fwrap-double.diff; then \
+	    echo "test-double successful"; \
+	else \
+	    echo "test-double failed (see file ${NAME}-fwrap-double.diff)"; \
+	fi
+
+test-fwrap-single: ${NAME}-fwrap-single.out ${NAME}-orig-single.out
+	@if diff ${NAME}-orig-single.out ${NAME}-fwrap-single.out \
+	    >${NAME}-fwrap-single.diff; then \
+	    echo "test-single successful"; \
+	else \
+	    echo "test-single failed (see file ${NAME}-fwrap-single.diff)"; \
+	fi

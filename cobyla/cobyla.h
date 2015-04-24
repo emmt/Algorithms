@@ -130,15 +130,88 @@ extern int cobyla_(INTEGER* n, INTEGER* m, REAL x[],
                    INTEGER* maxfun, REAL w[], INTEGER iact[]);
 
 /* Possible values returned by COBYLA. */
-#define COBYLA_SUCCESS                 (0)
+#define COBYLA_CALC_FC                 (1) /* user requested to compute
+                                              F(X) and C(X) */
+#define COBYLA_SUCCESS                 (0) /* algorithm converged */
 #define COBYLA_ROUNDING_ERRORS        (-1)
 #define COBYLA_TOO_MANY_EVALUATIONS   (-2)
+#define COBYLA_BAD_ADDRESS            (-3)
+#define COBYLA_CORRUPTED              (-4)
+
+/* Opaque structure used by the reverse communication version of COBYLA. */
+typedef struct _cobyla_context cobyla_context_t;
+
+/* Allocate a new reverse communication workspace for COBYLA algorithm.  The
+   returned address is `NULL` to indicate an error: either invalid parameters
+   (external variable `errno` set to `EINVAL`), or insufficient memory
+   (external variable `errno` set to `ENOMEM`).  When no longer needed, the
+   workspace must be deleted with `cobyla_delete`.
+
+   A typical usage is:
+   ```
+   REAL x[N], c[M], f;
+   cobyla_context_t* ws;
+   x[...] = ...; // initial solution
+   ws = cobyla_create(N, M, RHOBEG, RHOEND, IPRINT, MAXFUN);
+   status = cobyla_get_status(ws);
+   while (status == COBYLA_CALC_FC) {
+     f = ...; // compute function value at X
+     c[...] = ...; // compute constraints at X
+     status = cobyla_iterate(ws, f, x, c);
+   }
+   cobyla_delete(ws);
+   if (status != COBYLA_SUCCESS) {
+     fprintf(stderr, "Something work occured in COBYLA: %s\n",
+             cobyla_reason(status));
+   }
+   ```
+ */
+extern cobyla_context_t*
+cobyla_create(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
+              INTEGER iprint, INTEGER maxfun);
+
+/* Release ressource allocated for COBYLA reverse communication workspace.
+   Argument can be `NULL`. */
+extern void
+cobyla_delete(cobyla_context_t* ws);
+
+/* Perform the next iteration of the reverse communication version of the
+   COBYLA algorithm.  On entry, the wokspace status must be `COBYLA_CALC_FC`,
+   `f` and `c` are the function value and the constraints at `x`.  On exit, the
+   returned value (the new wokspace status) is: `COBYLA_CALC_FC` if a new trial
+   point has been stored in `x` and if user is requested to compute the
+   function value and the constraints on the new point; `COBYLA_SUCCESS` if
+   algorithm has converged; anything else indicate an error (see
+   `cobyla_reason` for an explanatory message). */
+extern int
+cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[]);
+
+/* Restart COBYLA algorithm using the same parameters.  The return value is
+   the new status of the algorithm, see `cobyla_get_status` for details. */
+extern int
+cobyla_restart(cobyla_context_t* ws);
+
+/* Get the current status of the algorithm.  Result is: `COBYLA_CALC_FC` if
+   user is requested to compute F(X) and C(X); `COBYLA_SUCCESS` if algorithm
+   has converged; anything else indicate an error (see `cobyla_reason` for an
+   explanatory message). */
+extern int
+cobyla_get_status(const cobyla_context_t* ws);
+
+/* Get the current number of function evaluations.  Result is -1 if something
+   is wrong (e.g. WS is NULL), nonnegative otherwise. */
+extern INTEGER
+cobyla_get_nfvals(const cobyla_context_t* ws);
+
+/* Get the current size of the trust region.  Result is 0 if algorithm not yet
+   started (before first iteration), -1 if something is wrong (e.g. WS is
+   NULL), strictly positive otherwise. */
+extern REAL
+cobyla_get_rho(const cobyla_context_t* ws);
 
 /* Get a textual explanation of the status returned by COBYLA. */
 extern const char*
 cobyla_reason(int status);
-
-extern const char* cobyla_get_error(int code);
 
 #ifdef __cplusplus
 }
