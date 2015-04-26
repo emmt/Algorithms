@@ -9,10 +9,12 @@ the variables.  The algorithm is described in:
 >  Without Derivatives."  Technical report, Department of Applied Mathematics
 >  and Theoretical Physics, University of Cambridge (2009).
 
-BOBYQA builds a quadratic model of the objective function.  For smooth
-objective functions, BOBYQA is expected to be more efficient than COBYLA
-(which exploits a more simple linear model but implements arbitrary
-inequality constraints).
+BOBYQA builds a quadratic model of the objective function from much less than
+`(N+1)(N+2)/2` values of the function (with `N` the number of variables).  The
+recommended number of points for building the quadratic model is `2*N+1`.  For
+smooth objective functions, BOBYQA is expected to be more efficient than COBYLA
+(which exploits a more simple linear model but implements arbitrary inequality
+constraints).
 
 In addition to being usable from C code, this version of BOBYQA has a few
 improvements over the FORTRAN version:
@@ -32,7 +34,7 @@ wrapper is available.
 ## Usage
 
 The code consists in two files [`bobyqa.c`](./bobyqa.c) and [`bobyqa.h`](./bobyqa.h)
-and is documented in the header `bobyqa.h`.
+and is documented in the header [`bobyqa.h`](./bobyqa.h).
 
 To build the library, edit the `Makefile` to suit your preferences and
 do:
@@ -40,6 +42,9 @@ do:
 make
 ```
 Then copy `libbobyqa.a` and `bobyqa.h` to appropriate directories.
+
+A number of macros can defined for the compiler to adapt the type of variables
+used in the code (see [`bobyqa.h`](./bobyqa.h) for details).
 
 You may check the code (this requires the original FORTRAN code available
 from Mike Powell on request at mjdp@cam.ac.uk):
