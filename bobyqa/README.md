@@ -1,7 +1,7 @@
 # C version of BOBYQA
 
 This provides a C implementation of Mike Powell's BOBYQA algorithm for
-minimizing a function of a few variables.  The method is *derivatives free*
+minimizing a function of many variables.  The method is *derivatives free*
 (only the function values are needed) and accounts for bound constraints on
 the variables.  The algorithm is described in:
 
