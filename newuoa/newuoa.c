@@ -210,10 +210,6 @@ newuoa(const INTEGER n, const INTEGER npt,
   INTEGER id, np, iw, igq, ihq, ixb, ifv, ipq, ivl, ixn, ixo, ixp, ndim,
     nptm, ibmat, izmat;
 
-  /* Parameter adjustments */
-  w -= 1;
-  x -= 1;
-
   /* Partition the working space array, so that different parts of it can be
      treated separately by the subroutine that performs the main
      calculation. */
@@ -226,7 +222,7 @@ newuoa(const INTEGER n, const INTEGER npt,
     return NEWUOA_BAD_NPT;
   }
   ndim = npt + n;
-  ixb = 1;
+  ixb = 0; /* C-indices start at 0 */
   ixo = ixb + n;
   ixn = ixo + n;
   ixp = ixn + n;
@@ -243,7 +239,7 @@ newuoa(const INTEGER n, const INTEGER npt,
   /* The above settings provide a partition of W for subroutine NEWUOB.  The
      partition requires the first NPT*(NPT+N)+5*N*(N+3)/2 elements of W plus
      the space that is needed by the last array of NEWUOB. */
-  return newuob(n, npt, objfun, data, &x[1], rhobeg, rhoend, iprint, maxfun,
+  return newuob(n, npt, objfun, data, x, rhobeg, rhoend, iprint, maxfun,
                 &w[ixb], &w[ixo], &w[ixn], &w[ixp], &w[ifv], &w[igq],
                 &w[ihq], &w[ipq], &w[ibmat], &w[izmat], ndim, &w[id],
                 &w[ivl], &w[iw]);
@@ -273,8 +269,8 @@ newuoa_(const INTEGER* n, const INTEGER* npt, REAL* x,
 
 static void
 bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
-       REAL* xpt, REAL* bmat, REAL* zmat, INTEGER* idz,
-       const INTEGER ndim, INTEGER* kopt, const INTEGER knew, REAL* d,
+       REAL* xpt, REAL* bmat, REAL* zmat, const INTEGER idz,
+       const INTEGER ndim, const INTEGER kopt, const INTEGER knew, REAL* d,
        REAL* w, REAL* vlag, REAL* beta, REAL* s,
        REAL* wvec, REAL* prod);
 
@@ -353,31 +349,29 @@ newuob(const INTEGER n, const INTEGER npt,
   const REAL half = 0.5;
   const REAL tenth = 0.1;
 
-  /* System generated locals */
-  REAL d1, d2, d3;
-
-  /* Local variables */
+  /* Local variables. */
   REAL alpha, beta, bsum, crvmin, delta, detrat, diff, diffa, diffb, diffc,
     distsq, dnorm, dsq, dstep, dx, f, fbeg, fopt, fsave, gisq, gqsq, hdiag,
-    ratio, recip, reciq, rho, rhosq, sum, suma, sumb, sumz, temp, tempq,
+    ratio, recip, reciq, rho, rhosq, sum, suma, sumb, sumz, temp, tempa,
+    tempb, tempq,
     vquad, xipt, xjpt, xoptsq;
   INTEGER i, idz, ih, ip, ipt, itemp, itest, j, jp, jpt, k, knew, kopt,
     ksave, ktemp, nf, nfm, nfmm, nfsav, nftest, nh, np, nptm;
   int status;
   const char* reason;
 
-  /* Parameter adjustments */
-  zmat  -= 1 + npt;
-  xpt   -= 1 + npt;
+  /* Parameter adjustments to comply with FORTRAN indexing. */
   x     -= 1;
   xbase -= 1;
   xopt  -= 1;
   xnew  -= 1;
+  xpt   -= 1 + npt;
   fval  -= 1;
   gq    -= 1;
   hq    -= 1;
   pq    -= 1;
   bmat  -= 1 + ndim;
+  zmat  -= 1 + npt;
   d     -= 1;
   vlag  -= 1;
   w     -= 1;
@@ -386,11 +380,13 @@ newuob(const INTEGER n, const INTEGER npt,
 #define ZMAT(a1,a2) zmat[(a2)*npt + a1]
 
   /* FIXME: Set uninitialized variables. */
-  nfsav = 0;
+  idz = 0;
   ipt = 0;
-  jpt = 0;
   itest = 0;
+  jpt = 0;
   knew = 0;
+  kopt = 0;
+  nfsav = 0;
   alpha = zero;
   crvmin = zero;
   delta = zero;
@@ -540,9 +536,7 @@ newuob(const INTEGER n, const INTEGER npt,
   xoptsq = zero;
   LOOP(i,n) {
     xopt[i] = XPT(kopt,i);
-    /* Computing 2nd power */
-    d1 = xopt[i];
-    xoptsq += d1*d1;
+    xoptsq += xopt[i]*xopt[i];
   }
  L90:
   nfsav = nf;
@@ -556,13 +550,10 @@ newuob(const INTEGER n, const INTEGER npt,
          &w[np + (n << 1)], &crvmin);
   dsq = zero;
   LOOP(i,n) {
-    /* Computing 2nd power */
-    d1 = d[i];
-    dsq += d1*d1;
+    dsq += d[i]*d[i];
   }
-  /* Computing MIN */
-  d1 = delta, d2 = SQRT(dsq);
-  dnorm = MIN(d1,d2);
+  dnorm = SQRT(dsq);
+  dnorm = MIN(dnorm,delta);
   if (dnorm < half*rho) {
     knew = -1;
     delta = tenth*delta;
@@ -574,9 +565,8 @@ newuob(const INTEGER n, const INTEGER npt,
       goto L460;
     }
     temp = crvmin*0.125*rho*rho;
-    /* Computing MAX */
-    d1 = MAX(diffa,diffb);
-    if (temp <= MAX(d1,diffc)) {
+    tempa = MAX(diffa,diffb);
+    if (temp <= MAX(tempa,diffc)) {
       goto L460;
     }
     goto L490;
@@ -727,12 +717,10 @@ newuob(const INTEGER n, const INTEGER npt,
      BIGDEN calculates an alternative model step, XNEW being used for working
      space. */
   if (knew > 0) {
-    /* Computing 2nd power */
-    d1 = vlag[knew];
-    temp = one + alpha*beta/(d1*d1);
+    temp = one + alpha*beta/(vlag[knew]*vlag[knew]);
     if (ABS(temp) <= 0.8) {
       bigden(n, npt, &xopt[1], &XPT(1,1), &BMAT(1,1),
-             &ZMAT(1,1), &idz, ndim, &kopt, knew, &d[1], &w[1],
+             &ZMAT(1,1), idz, ndim, kopt, knew, &d[1], &w[1],
              &vlag[1], &beta, &xnew[1], &w[ndim + 1], &w[ndim*6 + 1]);
     }
   }
@@ -801,9 +789,7 @@ newuob(const INTEGER n, const INTEGER npt,
     xoptsq = zero;
     LOOP(i,n) {
       xopt[i] = xnew[i];
-      /* Computing 2nd power */
-      d1 = xopt[i];
-      xoptsq += d1*d1;
+      xoptsq += xopt[i]*xopt[i];
     }
   }
   ksave = knew;
@@ -821,24 +807,21 @@ newuob(const INTEGER n, const INTEGER npt,
   if (ratio <= tenth) {
     delta = half*dnorm;
   } else if (ratio <= 0.7) {
-    /* Computing MAX */
-    d1 = half*delta;
-    delta = MAX(d1,dnorm);
+    delta *= half;
+    delta = MAX(delta,dnorm);
   } else {
-    /* Computing MAX */
-    d1 = half*delta, d2 = dnorm + dnorm;
-    delta = MAX(d1,d2);
+    tempa = dnorm + dnorm;
+    delta *= half;
+    delta = MAX(delta,tempa);
   }
   if (delta <= rho*1.5) {
     delta = rho;
   }
 
   /* Set KNEW to the index of the next interpolation point to be deleted. */
-  /* Computing MAX */
-  d2 = tenth*delta;
-  /* Computing 2nd power */
-  d1 = MAX(d2,rho);
-  rhosq = d1*d1;
+  tempa = tenth*delta;
+  tempa = MAX(tempa,rho);
+  rhosq = tempa*tempa;
   ktemp = 0;
   detrat = zero;
   if (f >= fsave) {
@@ -852,23 +835,17 @@ newuob(const INTEGER n, const INTEGER npt,
       if (j < idz) {
         temp = -one;
       }
-      /* Computing 2nd power */
-      d1 = ZMAT(k,j);
-      hdiag += temp*(d1*d1);
+      hdiag += temp*(ZMAT(k,j)*ZMAT(k,j));
     }
-    /* Computing 2nd power */
-    d2 = vlag[k];
-    temp = (d1 = beta*hdiag + d2*d2, ABS(d1));
+    temp = ABS(beta*hdiag + vlag[k]*vlag[k]);
     distsq = zero;
     LOOP(j,n) {
-      /* Computing 2nd power */
-      d1 = XPT(k,j) - xopt[j];
-      distsq += d1*d1;
+      tempa = XPT(k,j) - xopt[j];
+      distsq += tempa*tempa;
     }
     if (distsq > rhosq) {
-      /* Computing 3rd power */
-      d1 = distsq/rhosq;
-      temp *= d1*(d1*d1);
+      tempa = distsq/rhosq;
+      temp *= (tempa*tempa)*tempa;
     }
     if (temp > detrat && k != ktemp) {
       detrat = temp;
@@ -910,9 +887,7 @@ newuob(const INTEGER n, const INTEGER npt,
   gqsq = zero;
   LOOP(i,n) {
     gq[i] += diff*BMAT(knew,i);
-    /* Computing 2nd power */
-    d1 = gq[i];
-    gqsq += d1*d1;
+    gqsq += gq[i]*gq[i];
     XPT(knew,i) = xnew[i];
   }
 
@@ -990,9 +965,8 @@ newuob(const INTEGER n, const INTEGER npt,
   LOOP(k,npt) {
     sum = zero;
     LOOP(j,n) {
-      /* Computing 2nd power */
-      d1 = XPT(k,j) - xopt[j];
-      sum += d1*d1;
+      tempa = XPT(k,j) - xopt[j];
+      sum += tempa*tempa;
     }
     if (sum > distsq) {
       knew = k;
@@ -1003,11 +977,10 @@ newuob(const INTEGER n, const INTEGER npt,
   /* If KNEW is positive, then set DSTEP, and branch back for the next
      iteration, which will generate a "model step". */
   if (knew > 0) {
-    /* Computing MAX
-       Computing MIN */
-    d2 = tenth*SQRT(distsq), d3 = half*delta;
-    d1 = MIN(d2,d3);
-    dstep = MAX(d1,rho);
+    tempa = tenth*SQRT(distsq);
+    tempb = half*delta;
+    tempa = MIN(tempa,tempb);
+    dstep = MAX(tempa,rho);
     dsq = dstep*dstep;
     goto L120;
   }
@@ -1081,8 +1054,8 @@ newuob(const INTEGER n, const INTEGER npt,
 
 static void
 bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
-       REAL* xpt, REAL* bmat, REAL* zmat, INTEGER* idz,
-       const INTEGER ndim, INTEGER* kopt, const INTEGER knew, REAL* d,
+       REAL* xpt, REAL* bmat, REAL* zmat, const INTEGER idz,
+       const INTEGER ndim, const INTEGER kopt, const INTEGER knew, REAL* d,
        REAL* w, REAL* vlag, REAL* beta, REAL* s,
        REAL* wvec, REAL* prod)
 {
@@ -1130,32 +1103,29 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
   const REAL quart = 0.25;
   const REAL twopi = 2.0*M_PI;
 
-  /* System generated locals */
-  REAL d1;
-
-  /* Local variables */
+  /* Local variables. */
   REAL alpha, angle, dd, denmax, denold, densav, diff, ds, dstemp, dtest,
     ss, ssden, sstemp, step, sum, sumold, tau, temp, tempa, tempb, tempc,
     xoptd, xopts, xoptsq;
   REAL den[9], denex[9], par[9];
   INTEGER i, ip, isave, iterc, iu, j, jc, k, ksav, nptm, nw;
 
-  /* Parameter adjustments */
-  zmat -= 1 + npt;
-  xpt  -= 1 + npt;
+  /* Parameter adjustments to comply with FORTRAN indexing. */
   xopt -= 1;
-  prod -= 1 + ndim;
-  wvec -= 1 + ndim;
+  xpt  -= 1 + npt;
   bmat -= 1 + ndim;
+  zmat -= 1 + npt;
   d    -= 1;
   w    -= 1;
   vlag -= 1;
   s    -= 1;
-#define XPT(a1,a2) xpt[(a2)*npt + a1]
+  wvec -= 1 + ndim;
+  prod -= 1 + ndim;
+#define XPT(a1,a2)   xpt[(a2)*npt  + a1]
 #define BMAT(a1,a2) bmat[(a2)*ndim + a1]
 #define WVEC(a1,a2) wvec[(a2)*ndim + a1]
 #define PROD(a1,a2) prod[(a2)*ndim + a1]
-#define ZMAT(a1,a2) zmat[(a2)*npt + a1]
+#define ZMAT(a1,a2) zmat[(a2)*npt  + a1]
 
   /* Initialization. */
   nptm = npt - n - 1;
@@ -1167,7 +1137,7 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
   }
   LOOP(j,nptm) {
     temp = ZMAT(knew, j);
-    if (j < *idz) {
+    if (j < idz) {
       temp = -temp;
     }
     LOOP(k,npt) {
@@ -1185,23 +1155,17 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
   ss = zero;
   xoptsq = zero;
   LOOP(i,n) {
-    /* Computing 2nd power */
-    d1 = d[i];
-    dd += d1*d1;
+    dd += d[i]*d[i];
     s[i] = XPT(knew, i) - xopt[i];
     ds += d[i]*s[i];
-    /* Computing 2nd power */
-    d1 = s[i];
-    ss += d1*d1;
-    /* Computing 2nd power */
-    d1 = xopt[i];
-    xoptsq += d1*d1;
+    ss += s[i]*s[i];
+    xoptsq += xopt[i]*xopt[i];
   }
   if (ds*ds > dd*0.99*ss) {
     ksav = knew;
     dtest = ds*ds/ss;
     LOOP(k,npt) {
-      if (k != *kopt) {
+      if (k != kopt) {
         dstemp = zero;
         sstemp = zero;
         LOOP(i,n) {
@@ -1289,7 +1253,7 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
       LOOP(k,npt) {
         sum += ZMAT(k,j)*WVEC(k,jc);
       }
-      if (j < *idz) {
+      if (j < idz) {
         sum = -sum;
       }
       LOOP(k,npt) {
@@ -1345,9 +1309,7 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
   /* Extend DEN so that it holds all the coefficients of DENOM. */
   sum = zero;
   for (i = 1; i <= 5; ++i) {
-    /* Computing 2nd power */
-    d1 = PROD(knew, i);
-    par[i - 1] = half*(d1*d1);
+    par[i - 1] = half*(PROD(knew,i)*PROD(knew,i));
     sum += par[i - 1];
   }
   denex[0] = alpha*den[0] + par[0] + sum;
@@ -1438,9 +1400,7 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
   LOOP(i,n) {
     d[i] = par[1]*d[i] + par[2]*s[i];
     w[i] = xopt[i] + d[i];
-    /* Computing 2nd power */
-    d1 = d[i];
-    dd += d1*d1;
+    dd += d[i]*d[i];
     tempa += d[i]*w[i];
     tempb += w[i]*w[i];
   }
@@ -1474,9 +1434,7 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
   ss = zero;
   ds = zero;
   LOOP(i,n) {
-    /* Computing 2nd power */
-    d1 = s[i];
-    ss += d1*d1;
+    ss += s[i]*s[i];
     ds += d[i]*s[i];
   }
   ssden = dd*ss - ds*ds;
@@ -1492,7 +1450,7 @@ bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
       w[k] += WVEC(k,j)*par[j - 1];
     }
   }
-  vlag[*kopt] += one;
+  vlag[kopt] += one;
   return;
 } /* bigden */
 
@@ -1507,7 +1465,7 @@ biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
        REAL* xpt, REAL* bmat, REAL* zmat, INTEGER* idz,
        const INTEGER ndim, const INTEGER knew, const REAL delta, REAL* d,
        REAL* alpha, REAL* hcol, REAL* gc, REAL* gd,
-        REAL* s, REAL* w)
+       REAL* s, REAL* w)
 {
   /* N is the number of variables.
 
@@ -1543,19 +1501,16 @@ biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
   const REAL zero = 0.0;
   const REAL twopi = 2.0*M_PI;
 
-  /* System generated locals */
-  REAL d1;
-
-  /* Local variables */
+  /* Local variables. */
   REAL angle, cf1, cf2, cf3, cf4, cf5, cth, dd, delsq, denom, dhd, gg, scale,
     sp, ss, step, sth, sum, tau, taubeg, taumax, tauold, temp, tempa, tempb;
   INTEGER i, isave, iterc, iu, j, k, nptm;
 
-  /* Parameter adjustments */
-  zmat -= 1 + npt;
-  xpt  -= 1 + npt;
+  /* Parameter adjustments adjustments */
   xopt -= 1;
+  xpt  -= 1 + npt;
   bmat -= 1 + ndim;
+  zmat -= 1 + npt;
   d    -= 1;
   hcol -= 1;
   gc   -= 1;
@@ -1598,9 +1553,7 @@ biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
     d[i] = XPT(knew, i) - xopt[i];
     gc[i] = BMAT(knew, i);
     gd[i] = zero;
-    /* Computing 2nd power */
-    d1 = d[i];
-    dd += d1*d1;
+    dd += d[i]*d[i];
   }
   LOOP(k,npt) {
     temp = zero;
@@ -1623,9 +1576,7 @@ biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
   sp = zero;
   dhd = zero;
   LOOP(i,n) {
-    /* Computing 2nd power */
-    d1 = gc[i];
-    gg += d1*d1;
+    gg += gc[i]*gc[i];
     sp += d[i]*gc[i];
     dhd += d[i]*gd[i];
   }
@@ -1656,13 +1607,9 @@ biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
   sp = zero;
   ss = zero;
   LOOP(i,n) {
-    /* Computing 2nd power */
-    d1 = d[i];
-    dd += d1*d1;
+    dd += d[i]*d[i];
     sp += d[i]*s[i];
-    /* Computing 2nd power */
-    d1 = s[i];
-    ss += d1*d1;
+    ss += s[i]*s[i];
   }
   temp = dd*ss - sp*sp;
   if (temp <= dd*1e-8*ss) {
@@ -1789,18 +1736,15 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
   const REAL zero = 0.0;
   const REAL twopi = 2.0*M_PI;
 
-  /* System generated locals */
-  REAL d1, d2;
-
-  /* Local variables */
+  /* Local variables. */
   REAL alpha, angle, angtest, bstep, cf, cth, dd, delsq, dg, dhd, dhs, ds,
     gg, ggbeg, ggsav, qadd, qbeg, qmin, qnew, qred, qsav, ratio, reduc,
     sg, sgk, shs, ss, sth, temp, tempa, tempb;
   INTEGER i, ih, isave, iterc, itermax, itersw, iu, j, k;
 
-  /* Parameter adjustments */
-  xpt  -= 1 + npt;
+  /* Parameter adjustments to comply with FORTRAN indexing. */
   xopt -= 1;
+  xpt  -= 1 + npt;
   gq   -= 1;
   hq   -= 1;
   pq   -= 1;
@@ -1841,9 +1785,7 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
     hs[i] = zero;
     g[i] = gq[i] + hd[i];
     d[i] = -g[i];
-    /* Computing 2nd power */
-    d1 = d[i];
-    dd += d1*d1;
+    dd += d[i]*d[i];
   }
   *crvmin = zero;
   if (dd == zero) {
@@ -1872,11 +1814,11 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
     temp = dhd/dd;
     if (iterc == 1) {
       *crvmin = temp;
+    } else {
+      *crvmin = MIN(*crvmin,temp);
     }
-    *crvmin = MIN(*crvmin,temp);
-    /* Computing MIN */
-    d1 = alpha, d2 = gg/dhd;
-    alpha = MIN(d1,d2);
+    temp = gg/dhd;
+    alpha = MIN(alpha,temp);
   }
   qadd = alpha*(gg - half*alpha*dhd);
   qred += qadd;
@@ -1887,9 +1829,8 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
   LOOP(i,n) {
     step[i] += alpha*d[i];
     hs[i] += alpha*hd[i];
-    /* Computing 2nd power */
-    d1 = g[i] + hs[i];
-    gg += d1*d1;
+    temp = g[i] + hs[i];
+    gg += temp*temp;
   }
 
   /* Begin another conjugate direction iteration if required. */
@@ -1909,13 +1850,9 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
     ss = zero;
     LOOP(i,n) {
       d[i] = temp*d[i] - g[i] - hs[i];
-      /* Computing 2nd power */
-      d1 = d[i];
-      dd += d1*d1;
+      dd += d[i]*d[i];
       ds += d[i]*step[i];
-      /* Computing 2nd power */
-      d1 = step[i];
-      ss += d1*d1;
+      ss += step[i]*step[i];
     }
     if (ds <= zero) {
       goto L160;
@@ -2008,9 +1945,8 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
   LOOP(i,n) {
     step[i] = cth*step[i] + sth*d[i];
     hs[i] = cth*hs[i] + sth*hd[i];
-    /* Computing 2nd power */
-    d1 = g[i] + hs[i];
-    gg += d1*d1;
+    temp = g[i] + hs[i];
+    gg += temp*temp;
   }
   qred += reduc;
   ratio = reduc/qred;
@@ -2074,11 +2010,11 @@ update(const INTEGER n, const INTEGER npt, REAL* bmat,
   const REAL one = 1.0;
   const REAL zero = 0.0;
 
-  /* Local variables */
+  /* Local variables. */
   REAL alpha, denom, scala, scalb, tau, tausq, temp, tempa, tempb;
   INTEGER i, iflag, j, ja, jb, jl, jp, nptm;
 
-  /* Parameter adjustments */
+  /* Parameter adjustments to comply with FORTRAN indexing. */
   zmat -= 1 + npt;
   bmat -= 1 + ndim;
   vlag -= 1;
