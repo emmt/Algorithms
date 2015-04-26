@@ -97,7 +97,7 @@ print_x(FILE* output, const INTEGER n, const REAL x[], const REAL dx[]);
 
 static int
 bobyqb(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const REAL rhoend,
        const INTEGER iprint, const INTEGER maxfun,
@@ -116,7 +116,7 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
 
 static void
 prelim(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const INTEGER iprint,
        const INTEGER maxfun, REAL* xbase, REAL* xpt, REAL* fval,
@@ -133,7 +133,7 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
 
 static void
 rescue(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        const REAL* xl, const REAL* xu,
        const INTEGER iprint, const INTEGER maxfun,
        REAL* xbase, REAL* xpt, REAL* fval, REAL* xopt,
@@ -151,7 +151,7 @@ update(const INTEGER n, const INTEGER npt, REAL* bmat,
 /* TESTING */
 
 static REAL
-calfun_test(const INTEGER n, const REAL* x, void* data);
+objfun_test(const INTEGER n, const REAL* x, void* data);
 
 #ifdef TESTING
 
@@ -165,7 +165,7 @@ main(int argc, char* argv[])
 int
 calfun_(const INTEGER* n, REAL* x, REAL* f)
 {
-  *f = calfun_test(*n, x, NULL);
+  *f = objfun_test(*n, x, NULL);
   return 0;
 }
 
@@ -208,14 +208,14 @@ bobyqa_test(void)
         x[2*j - 2] = COS(temp);
         x[2*j - 1] = SIN(temp);
       }
-      bobyqa(n, npt, calfun_test, NULL, x, xl, xu, rhobeg, rhoend,
+      bobyqa(n, npt, objfun_test, NULL, x, xl, xu, rhobeg, rhoend,
              iprint, maxfun, w);
     }
   }
 }
 
 static REAL
-calfun_test(const INTEGER n, const REAL* x, void* data)
+objfun_test(const INTEGER n, const REAL* x, void* data)
 {
   INTEGER i;
   REAL f, temp, tempa, tempb;
@@ -239,7 +239,7 @@ calfun_test(const INTEGER n, const REAL* x, void* data)
 
 int
 bobyqa(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const REAL rhoend,
        const INTEGER iprint, const INTEGER maxfun, REAL* w)
@@ -331,7 +331,7 @@ bobyqa(const INTEGER n, const INTEGER npt,
   }
 
   /* Make the call of BOBYQB. */
-  return bobyqb(n, npt, calfun, data, &x[1], &xl[1], &xu[1],
+  return bobyqb(n, npt, objfun, data, &x[1], &xl[1], &xu[1],
                 rhobeg, rhoend, iprint, maxfun,
                 &w[ixb], &w[ixp], &w[ifv], &w[ixo], &w[igo],
                 &w[ihq], &w[ipq], &w[ibmat], &w[izmat],
@@ -364,7 +364,7 @@ bobyqa_(const INTEGER* n, const INTEGER* npt,
 
 static int
 bobyqb(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const REAL rhoend,
        const INTEGER iprint, const INTEGER maxfun,
@@ -407,7 +407,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
      constraint boundary.
 
      XNEW is chosen by SUBROUTINE TRSBOX or ALTMOV. Usually XBASE+XNEW is the
-     vector of variables for the next call of CALFUN. XNEW also satisfies the
+     vector of variables for the next call of OBJFUN. XNEW also satisfies the
      SL and SU constraints in the way that has just been mentioned.
 
      XALT is an alternative to XNEW, chosen by ALTMOV, that may replace XNEW in
@@ -480,11 +480,11 @@ bobyqb(const INTEGER n, const INTEGER npt,
 
   /* The call of PRELIM sets the elements of XBASE, XPT, FVAL, GOPT, HQ, PQ,
      BMAT and ZMAT for the first iteration, with the corresponding values of of
-     NF and KOPT, which are the number of calls of CALFUN so far and the index
+     NF and KOPT, which are the number of calls of OBJFUN so far and the index
      of the interpolation point at the trust region centre.  Then the initial
      XOPT is set too.  The branch to label 720 occurs if MAXFUN is less than
      NPT.  GOPT will be updated if KOPT is different from KBASE. */
-  prelim(n, npt, calfun, data, &x[1], &xl[1], &xu[1], rhobeg, iprint, maxfun,
+  prelim(n, npt, objfun, data, &x[1], &xl[1], &xu[1], rhobeg, iprint, maxfun,
          &xbase[1], &XPT(1,1), &fval[1], &gopt[1], &hq[1], &pq[1], &BMAT(1,1),
          &ZMAT(1,1), ndim, &sl[1], &su[1], &nf, &kopt);
   xoptsq = zero;
@@ -509,7 +509,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
   nfsav = nf;
 
   /* Update GOPT if necessary before the first iteration and after each
-     call of RESCUE that makes a call of CALFUN. */
+     call of RESCUE that makes a call of OBJFUN. */
  L20:
   if (kopt != kbase) {
     ih = 0;
@@ -686,7 +686,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
  L190:
   nfsav = nf;
   kbase = kopt;
-  rescue(n, npt, calfun, data, &xl[1], &xu[1], iprint, maxfun, &xbase[1],
+  rescue(n, npt, objfun, data, &xl[1], &xu[1], iprint, maxfun, &xbase[1],
          &XPT(1,1), &fval[1], &xopt[1], &gopt[1], &hq[1],
          &pq[1], &BMAT(1,1), &ZMAT(1,1), ndim, &sl[1], &su[1],
          &nf, delta, &kopt, &vlag[1], &w[1], &w[n + np], &w[ndim + np]);
@@ -863,7 +863,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
     goto too_many_evaluations;
   }
   ++nf;
-  f = calfun(n, &x[1], data);
+  f = objfun(n, &x[1], data);
   if (iprint == 3) {
     fprintf(OUTPUT,
             "    Function number%6ld    F =%18.10E"
@@ -1615,7 +1615,7 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
 
 static void
 prelim(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const INTEGER iprint,
        const INTEGER maxfun, REAL* xbase, REAL* xpt, REAL* fval,
@@ -1634,7 +1634,7 @@ prelim(const INTEGER n, const INTEGER npt,
 
      If XOPT is nonzero, BOBYQB will change it to its usual value later.
 
-     NF is maintaned as the number of calls of CALFUN so far.
+     NF is maintaned as the number of calls of OBJFUN so far.
 
      KOPT will be such that the least calculated value of F so far is at the
      point XPT(KOPT,.)+XBASE in the space of the variables.
@@ -1760,7 +1760,7 @@ prelim(const INTEGER n, const INTEGER npt,
         x[j] = xu[j];
       }
     }
-    f = calfun(n, &x[1], data);
+    f = objfun(n, &x[1], data);
     if (iprint == 3) {
       fprintf(OUTPUT, "Function number%6ld    F = %.18G"
               "    The corresponding X is: ", (long)*nf, (double)f);
@@ -1834,7 +1834,7 @@ prelim(const INTEGER n, const INTEGER npt,
 
 static void
 rescue(const INTEGER n, const INTEGER npt,
-       bobyqa_calfun* calfun, void* data,
+       bobyqa_objfun* objfun, void* data,
        const REAL* xl, const REAL* xu,
        const INTEGER iprint, const INTEGER maxfun,
        REAL* xbase, REAL* xpt, REAL* fval, REAL* xopt,
@@ -1847,7 +1847,7 @@ rescue(const INTEGER n, const INTEGER npt,
      GOPT, HQ, PQ, BMAT, ZMAT, NDIM, SL and SU have the same meanings as the
      corresponding arguments of BOBYQB on the entry to RESCUE.
 
-     NF is maintained as the number of calls of CALFUN so far, except that NF
+     NF is maintained as the number of calls of OBJFUN so far, except that NF
      is set to -1 if the value of MAXFUN prevents further progress.
 
      KOPT is maintained so that FVAL(KOPT) is the least calculated function
@@ -2261,7 +2261,7 @@ rescue(const INTEGER n, const INTEGER npt,
       }
     }
     ++(*nf);
-    f = calfun(n, &w[1], data);
+    f = objfun(n, &w[1], data);
     if (iprint == 3) {
       fprintf(OUTPUT,
               "    Function number%6ld"

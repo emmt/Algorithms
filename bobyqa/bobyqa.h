@@ -46,7 +46,7 @@ extern "C" {
    returned value is the function value at X the current variables, N is the
    number of variables and DATA is anything needed by the function (unused by
    BOBYQA itself). */
-typedef REAL bobyqa_calfun(const INTEGER n, const REAL* x, void* data);
+typedef REAL bobyqa_objfun(const INTEGER n, const REAL* x, void* data);
 
 
 /* BOBYQA seeks the least value of a function of many variables, by applying a
@@ -61,11 +61,11 @@ typedef REAL bobyqa_calfun(const INTEGER n, const REAL* x, void* data);
    the number of interpolation conditions.  Its value must be in the interval
    [N+2,(N+1)(N+2)/2].  Choices that exceed 2*N+1 are not recommended.
 
-   CALFUN is provided by the user to compute the objective function value at
+   OBJFUN is provided by the user to compute the objective function value at
    the values of the variables X(1),X(2),...,X(N), which are generated
    automatically by BOBYQA in a way that satisfies the bounds given in XL and
    XU.  DATA is anything needed by the function and which is passed as is to
-   CALFUN by BOBYQA.
+   OBJFUN by BOBYQA.
 
    Initial values of the variables must be set in X(1),X(2),...,X(N).  They
    will be changed to the values that give the least calculated F.  For
@@ -89,12 +89,12 @@ typedef REAL bobyqa_calfun(const INTEGER n, const REAL* x, void* data);
    value of the objective function.  Further, each new value of F with its
    variables are output if IPRINT=3.
 
-   MAXFUN must be set to an upper bound on the number of calls of CALFUN.
+   MAXFUN must be set to an upper bound on the number of calls of OBJFUN.
 
    The array W will be used for working space.  Its length must be at least
    (NPT+5)*(NPT+N)+3*N*(N+5)/2. */
 extern int bobyqa(const INTEGER n, const INTEGER npt,
-                  bobyqa_calfun* calfun, void* data,
+                  bobyqa_objfun* objfun, void* data,
                   REAL* x, const REAL* xl, const REAL* xu,
                   const REAL rhobeg, const REAL rhoend,
                   const INTEGER iprint, const INTEGER maxfun, REAL* w);
@@ -149,8 +149,8 @@ extern int bobyqa_(const INTEGER* n, const INTEGER* npt,
                    const INTEGER* iprint, const INTEGER* maxfun,
                    REAL* w);
 
-/* Wrapper function to emulate `newuoa_calfun` function calling
-   the user-defined `calfun_` subroutine. */
+/* Wrapper function to emulate `newuoa_objfun` objective function calling the
+   user-defined `calfun_` subroutine. */
 extern REAL bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data);
 
 /* Subroutine that must be defined by the application to use the FORTRAN
