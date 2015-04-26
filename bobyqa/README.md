@@ -9,7 +9,7 @@ the variables.  The algorithm is described in:
 >  Without Derivatives."  Technical report, Department of Applied Mathematics
 >  and Theoretical Physics, University of Cambridge (2009).
 
-BOBYQA build a quadratic model of the objective function.  For smooth
+BOBYQA builds a quadratic model of the objective function.  For smooth
 objective functions, BOBYQA is expected to be more efficient than COBYLA
 (which exploits a more simple linear model but implements arbitrary
 inequality constraints).
@@ -55,6 +55,7 @@ Powell who kindly provides his code on demand (at mjdp@cam.ac.uk) and has
 been converted to C by É. Thiébaut.
 
 Copyright (c) 2009, Mike Powell (FORTRAN version).
+
 Copyright (c) 2015, Éric Thiébaut (C version).
 
 Read the accompanying [`LICENSE`](../LICENSE) file for details.
