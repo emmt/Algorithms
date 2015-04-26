@@ -22,7 +22,7 @@ constraints on the variables.  The algorithm is described in:
 ## NEWUOA
 
 Directory [newuoa](newuoa) provides a C implementation of Mike Powell's
-NEWUOA algorithm for minimizing a function of a few variables.  The method
+NEWUOA algorithm for minimizing a function of many variables.  The method
 is *derivatives free* (only the function values are needed) and accounts
 for bound constraints on the variables.  The algorithm is described in:
 
