@@ -545,7 +545,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
  L60:
   trsbox(n, npt, &XPT(1,1), &xopt[1], &gopt[1], &hq[1], &pq[1],
          &sl[1], &su[1], delta, &xnew[1], &d[1], &w[1], &w[np],
-         &w[np + n], &w[np + (n << 1)], &w[np + n*3], &dsq, &crvmin);
+         &w[np + n], &w[np + 2*n], &w[np + n*3], &dsq, &crvmin);
   dnorm = SQRT(dsq);
   dnorm = MIN(dnorm,delta);
   if (dnorm < half*rho) {
@@ -2013,7 +2013,7 @@ rescue(const INTEGER n, const INTEGER npt,
 
   /* Set any remaining identifiers with their nonzero elements of ZMAT. */
   if (npt >= n + np) {
-    for (k = np << 1; k <= npt; ++k) {
+    for (k = 2*np; k <= npt; ++k) {
       iw = (INTEGER) (((REAL)(k - np) - half)/(REAL)n);
       ip = k - np - iw*n;
       iq = ip + iw;
