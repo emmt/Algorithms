@@ -350,15 +350,18 @@ newuob(const INTEGER n, const INTEGER npt,
   const REAL tenth = 0.1;
 
   /* Local variables. */
-  REAL alpha, beta, bsum, crvmin, delta, detrat, diff, diffa, diffb, diffc,
-    distsq, dnorm, dsq, dstep, dx, f, fbeg, fopt, fsave, gisq, gqsq, hdiag,
-    ratio, recip, reciq, rho, rhosq, sum, suma, sumb, sumz, temp, tempa,
-    tempb, tempq,
-    vquad, xipt, xjpt, xoptsq;
-  INTEGER i, idz, ih, ip, ipt, itemp, itest, j, jp, jpt, k, knew, kopt,
-    ksave, ktemp, nf, nfm, nfmm, nfsav, nftest, nh, np, nptm;
+  REAL alpha, beta, crvmin, delta, diff, diffa, diffb, diffc, dnorm, dsq,
+    dstep, f, fbeg, fopt, gqsq, ratio, recip, reciq, rho, rhosq, vquad
+    , xipt, xjpt, xoptsq;
+  INTEGER idz, ih, ipt, itest, jpt, knew, kopt,
+    ksave, nf, nfm, nfmm, nfsav, nftest, nh, np, nptm;
   int status;
   const char* reason;
+
+  /* Temporary variables (these variables do not have to be saved in the
+     reverse communication version of the algorithm). */
+  REAL bsum, detrat, distsq, dx, fsave, temp, tempa, tempb;
+  INTEGER i, j, k, ktemp;
 
   /* Parameter adjustments to comply with FORTRAN indexing. */
   x     -= 1;
@@ -447,7 +450,7 @@ newuob(const INTEGER n, const INTEGER npt,
       XPT(nf,nfmm) = -rhobeg;
     }
   } else {
-    itemp = (nfmm - 1)/n;
+    INTEGER itemp = (nfmm - 1)/n;
     jpt = nfm - itemp*n - n;
     ipt = jpt + itemp;
     if (ipt > n) {
@@ -576,6 +579,8 @@ newuob(const INTEGER n, const INTEGER npt,
      to BMAT that do not depend on ZMAT. */
  L120:
   if (dsq <= xoptsq*0.001) {
+    REAL sum, sumz, tempq;
+    INTEGER ip;
     tempq = xoptsq*0.25;
     LOOP(k,npt) {
       sum = zero;
@@ -667,9 +672,9 @@ newuob(const INTEGER n, const INTEGER npt,
   /* Calculate VLAG and BETA for the current choice of D. The first NPT
      components of W_check will be held in W. */
   LOOP(k,npt) {
-    suma = zero;
-    sumb = zero;
-    sum = zero;
+    REAL suma = zero;
+    REAL sumb = zero;
+    REAL sum = zero;
     LOOP(j,n) {
       suma += XPT(k,j)*d[j];
       sumb += XPT(k,j)*xopt[j];
@@ -680,7 +685,7 @@ newuob(const INTEGER n, const INTEGER npt,
   }
   beta = zero;
   LOOP(k,nptm) {
-    sum = zero;
+    REAL sum = zero;
     LOOP(i,npt) {
       sum += ZMAT(i,k)*w[i];
     }
@@ -697,7 +702,8 @@ newuob(const INTEGER n, const INTEGER npt,
   bsum = zero;
   dx = zero;
   LOOP(j,n) {
-    sum = zero;
+    REAL sum = zero;
+    INTEGER jp;
     LOOP(i,npt) {
       sum += w[i]*BMAT(i,j);
     }
@@ -829,7 +835,7 @@ newuob(const INTEGER n, const INTEGER npt,
     detrat = one;
   }
   LOOP(k,npt) {
-    hdiag = zero;
+    REAL hdiag = zero;
     LOOP(j,nptm) {
       temp = one;
       if (j < idz) {
@@ -898,12 +904,13 @@ newuob(const INTEGER n, const INTEGER npt,
     if (ABS(ratio) > 0.01) {
       itest = 0;
     } else {
+      REAL gisq;
       LOOP(k,npt) {
         vlag[k] = fval[k] - fval[kopt];
       }
       gisq = zero;
       LOOP(i,n) {
-        sum = zero;
+        REAL sum = zero;
         LOOP(k,npt) {
           sum += BMAT(k,i)*vlag[k];
         }
@@ -960,7 +967,7 @@ newuob(const INTEGER n, const INTEGER npt,
  L460:
   distsq = delta*4.0*delta;
   LOOP(k,npt) {
-    sum = zero;
+    REAL sum = zero;
     LOOP(j,n) {
       tempa = XPT(k,j) - xopt[j];
       sum += tempa*tempa;
