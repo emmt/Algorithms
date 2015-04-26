@@ -95,9 +95,6 @@ print_error(const char* reason);
 static void
 print_x(FILE* output, const INTEGER n, const REAL x[], const REAL dx[]);
 
-static REAL
-calfun_wrapper(const INTEGER n, const REAL* x, void* data);
-
 static int
 bobyqb(const INTEGER n, const INTEGER npt,
        bobyqa_calfun* calfun, void* data,
@@ -342,9 +339,8 @@ bobyqa(const INTEGER n, const INTEGER npt,
                 &w[id], &w[ivl], &w[iw]);
 } /* bobyqa */
 
-
-static REAL
-calfun_wrapper(const INTEGER n, const REAL* x, void* data)
+REAL
+bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data)
 {
   REAL f;
   calfun_(&n, (REAL*)x, &f);
@@ -358,7 +354,7 @@ bobyqa_(const INTEGER* n, const INTEGER* npt,
         const INTEGER* iprint, const INTEGER* maxfun,
         REAL* w)
 {
-  bobyqa(*n, *npt, calfun_wrapper, NULL, x, xl, xu,
+  bobyqa(*n, *npt, bobyqa_calfun_wrapper, NULL, x, xl, xu,
          *rhobeg, *rhoend, *iprint, *maxfun, w);
   return 0;
 }

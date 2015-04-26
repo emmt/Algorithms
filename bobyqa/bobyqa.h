@@ -112,25 +112,6 @@ extern int bobyqa(const INTEGER n, const INTEGER npt,
 #define BOBYQA_STEP_FAILED            (-5) /* a trust region step has failed to
                                               reduce Q */
 
-/* Subroutine that must be defined by the application to use the FORTRAN
-   wrapper to BOBYQA. */
-extern int calfun_(const INTEGER* n, REAL* x, REAL* f);
-
-/* This subroutine is a version of BOBYQA that is callable from FORTRAN code.
-   The main difference with the C version is that the objective function
-   mustbe provided by the following external subroutine.
-
-   SUBROUTINE CALFUN (N,X,F) has to be provided by the user.  It must set F
-   to the value of the objective function for the current values of the
-   variables X(1),X(2),...,X(N), which are generated automatically in a way
-   that satisfies the bounds given in XL and XU.
-*/
-extern int bobyqa_(const INTEGER* n, const INTEGER* npt,
-                   REAL* x, const REAL* xl, const REAL* xu,
-                   const REAL* rhobeg, const REAL* rhoend,
-                   const INTEGER* iprint, const INTEGER* maxfun,
-                   REAL* w);
-
 /* Test problem for BOBYQA, the objective function being the sum of the
    reciprocals of all pairwise distances between the points P_I,
    I=1,2,...,M in two dimensions, where M=N/2 and where the components of
@@ -144,6 +125,37 @@ extern int bobyqa_(const INTEGER* n, const INTEGER* npt,
    reduced. The bound constraints of the problem require every component of
    X to be in the interval [-1,1]. */
 extern void bobyqa_test(void);
+
+/*---------------------------------------------------------------------------*/
+/* FORTRAN WRAPPER */
+
+/* Remark: Depending on your FORTRAN compiler, you may have to change the
+           names of the compiled functions (it is assumed below that the
+           link name is the name of the FORTRAN subroutine converted to
+           lower case letters and with an underscore appended). */
+
+/* This subroutine is a version of BOBYQA that is callable from FORTRAN code.
+   The main difference with the C version is that the objective function
+   must be provided by the following external subroutine.
+
+   SUBROUTINE CALFUN (N,X,F) has to be provided by the user.  It must set F
+   to the value of the objective function for the current values of the
+   variables X(1),X(2),...,X(N), which are generated automatically in a way
+   that satisfies the bounds given in XL and XU.
+*/
+extern int bobyqa_(const INTEGER* n, const INTEGER* npt,
+                   REAL* x, const REAL* xl, const REAL* xu,
+                   const REAL* rhobeg, const REAL* rhoend,
+                   const INTEGER* iprint, const INTEGER* maxfun,
+                   REAL* w);
+
+/* Wrapper function to emulate `newuoa_calfun` function calling
+   the user-defined `calfun_` subroutine. */
+extern REAL bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data);
+
+/* Subroutine that must be defined by the application to use the FORTRAN
+   wrapper to BOBYQA. */
+extern int calfun_(const INTEGER* n, REAL* x, REAL* f);
 
 #ifdef __cplusplus
 }
