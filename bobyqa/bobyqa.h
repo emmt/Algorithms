@@ -2,7 +2,7 @@
  * bobyqa.h -
  *
  * Definitions for Mike Powell's BOBYQA algorithm for minimizing a function of
- * a few variables.  The method is "derivatives free" (only the function values
+ * many variables.  The method is "derivatives free" (only the function values
  * are needed) and accounts for bound constraints on the variables.  The
  * algorithm is described in:
  *
@@ -46,7 +46,7 @@ extern "C" {
    returned value is the function value at X the current variables, N is the
    number of variables and DATA is anything needed by the function (unused by
    BOBYQA itself). */
-typedef REAL bobyca_calfun(const INTEGER n, const REAL *x, void* data);
+typedef REAL bobyqa_calfun(const INTEGER n, const REAL* x, void* data);
 
 
 /* BOBYQA seeks the least value of a function of many variables, by applying a
@@ -94,10 +94,10 @@ typedef REAL bobyca_calfun(const INTEGER n, const REAL *x, void* data);
    The array W will be used for working space.  Its length must be at least
    (NPT+5)*(NPT+N)+3*N*(N+5)/2. */
 extern int bobyqa(const INTEGER n, const INTEGER npt,
-                  bobyca_calfun* calfun, void* data,
-                  REAL *x, const REAL *xl, const REAL *xu,
+                  bobyqa_calfun* calfun, void* data,
+                  REAL* x, const REAL* xl, const REAL* xu,
                   const REAL rhobeg, const REAL rhoend,
-                  const INTEGER iprint, const INTEGER maxfun, REAL *w);
+                  const INTEGER iprint, const INTEGER maxfun, REAL* w);
 
 /* Possible values returned by BOBYQA. */
 #define BOBYQA_SUCCESS                 (0) /* algorithm converged */
@@ -114,7 +114,7 @@ extern int bobyqa(const INTEGER n, const INTEGER npt,
 
 /* Subroutine that must be defined by the application to use the FORTRAN
    wrapper to BOBYQA. */
-extern int calfun_(const INTEGER* n, REAL *x, REAL *f);
+extern int calfun_(const INTEGER* n, REAL* x, REAL* f);
 
 /* This subroutine is a version of BOBYQA that is callable from FORTRAN code.
    The main difference with the C version is that the objective function

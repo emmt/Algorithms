@@ -2,7 +2,7 @@
  * bobyqa.c -
  *
  * Implementation of Mike Powell's BOBYQA algorithm for minimizing a function
- * of a few variables.  The method is "derivatives free" (only the function
+ * of many variables.  The method is "derivatives free" (only the function
  * values are needed) and accounts for bound constraints on the variables.  The
  * algorithm is described in:
  *
@@ -100,55 +100,55 @@ calfun_wrapper(const INTEGER n, const REAL* x, void* data);
 
 static int
 bobyqb(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       REAL *x, const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const REAL rhoend,
        const INTEGER iprint, const INTEGER maxfun,
-       REAL *xbase, REAL *xpt, REAL *fval, REAL *xopt,
-       REAL *gopt, REAL *hq, REAL *pq, REAL *bmat, REAL *zmat,
-       const INTEGER ndim, REAL *sl, REAL *su, REAL *xnew,
-       REAL *xalt, REAL *d, REAL *vlag, REAL *w);
+       REAL* xbase, REAL* xpt, REAL* fval, REAL* xopt,
+       REAL* gopt, REAL* hq, REAL* pq, REAL* bmat, REAL* zmat,
+       const INTEGER ndim, REAL* sl, REAL* su, REAL* xnew,
+       REAL* xalt, REAL* d, REAL* vlag, REAL* w);
 
 
 static void
 altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
-       REAL *xopt, REAL *bmat, REAL *zmat, const INTEGER ndim,
-       REAL *sl, REAL *su, const INTEGER kopt, const INTEGER knew,
-       const REAL adelt, REAL *xnew, REAL *xalt, REAL *alpha,
-       REAL *cauchy, REAL *glag, REAL *hcol, REAL *w);
+       REAL* xopt, REAL* bmat, REAL* zmat, const INTEGER ndim,
+       REAL* sl, REAL* su, const INTEGER kopt, const INTEGER knew,
+       const REAL adelt, REAL* xnew, REAL* xalt, REAL* alpha,
+       REAL* cauchy, REAL* glag, REAL* hcol, REAL* w);
 
 static void
 prelim(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       REAL *x, const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const INTEGER iprint,
-       const INTEGER maxfun, REAL *xbase, REAL *xpt, REAL *fval,
-       REAL *gopt, REAL *hq, REAL *pq, REAL *bmat,
-       REAL *zmat, const INTEGER ndim, REAL *sl, REAL *su,
-       INTEGER *nf, INTEGER *kopt);
+       const INTEGER maxfun, REAL* xbase, REAL* xpt, REAL* fval,
+       REAL* gopt, REAL* hq, REAL* pq, REAL* bmat,
+       REAL* zmat, const INTEGER ndim, REAL* sl, REAL* su,
+       INTEGER* nf, INTEGER* kopt);
 
 static void
-trsbox(const INTEGER n, const INTEGER npt, REAL *xpt,
-       REAL *xopt, REAL *gopt, REAL *hq, REAL *pq,
-       REAL *sl, REAL *su, const REAL delta, REAL *xnew,
-       REAL *d, REAL *gnew, REAL *xbdi, REAL *s,
-       REAL *hs, REAL *hred, REAL *dsq, REAL *crvmin);
+trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
+       REAL* xopt, REAL* gopt, REAL* hq, REAL* pq,
+       REAL* sl, REAL* su, const REAL delta, REAL* xnew,
+       REAL* d, REAL* gnew, REAL* xbdi, REAL* s,
+       REAL* hs, REAL* hred, REAL* dsq, REAL* crvmin);
 
 static void
 rescue(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       const REAL* xl, const REAL* xu,
        const INTEGER iprint, const INTEGER maxfun,
-       REAL *xbase, REAL *xpt, REAL *fval, REAL *xopt,
-       REAL *gopt, REAL *hq, REAL *pq, REAL *bmat, REAL *zmat,
-       const INTEGER ndim, REAL *sl, REAL *su, INTEGER *nf,
-       const REAL delta, INTEGER *kopt, REAL *vlag, REAL *ptsaux,
-       REAL *ptsid, REAL *w);
+       REAL* xbase, REAL* xpt, REAL* fval, REAL* xopt,
+       REAL* gopt, REAL* hq, REAL* pq, REAL* bmat, REAL* zmat,
+       const INTEGER ndim, REAL* sl, REAL* su, INTEGER* nf,
+       const REAL delta, INTEGER* kopt, REAL* vlag, REAL* ptsaux,
+       REAL* ptsid, REAL* w);
 
 static void
-update(const INTEGER n, const INTEGER npt, REAL *bmat,
-       REAL *zmat, const INTEGER ndim, REAL *vlag, const REAL beta,
-       const REAL denom, const INTEGER knew, REAL *w);
+update(const INTEGER n, const INTEGER npt, REAL* bmat,
+       REAL* zmat, const INTEGER ndim, REAL* vlag, const REAL beta,
+       const REAL denom, const INTEGER knew, REAL* w);
 
 /*---------------------------------------------------------------------------*/
 /* TESTING */
@@ -166,7 +166,7 @@ main(int argc, char* argv[])
 }
 
 int
-calfun_(const INTEGER* n, REAL *x, REAL *f)
+calfun_(const INTEGER* n, REAL* x, REAL* f)
 {
   *f = calfun_test(*n, x, NULL);
   return 0;
@@ -242,10 +242,10 @@ calfun_test(const INTEGER n, const REAL* x, void* data)
 
 int
 bobyqa(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       REAL *x, const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const REAL rhoend,
-       const INTEGER iprint, const INTEGER maxfun, REAL *w)
+       const INTEGER iprint, const INTEGER maxfun, REAL* w)
 {
   /* Constants. */
   const REAL zero = 0.0;
@@ -368,14 +368,14 @@ bobyqa_(const INTEGER* n, const INTEGER* npt,
 
 static int
 bobyqb(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       REAL *x, const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const REAL rhoend,
        const INTEGER iprint, const INTEGER maxfun,
-       REAL *xbase, REAL *xpt, REAL *fval, REAL *xopt,
-       REAL *gopt, REAL *hq, REAL *pq, REAL *bmat, REAL *zmat,
-       const INTEGER ndim, REAL *sl, REAL *su, REAL *xnew,
-       REAL *xalt, REAL *d, REAL *vlag, REAL *w)
+       REAL* xbase, REAL* xpt, REAL* fval, REAL* xopt,
+       REAL* gopt, REAL* hq, REAL* pq, REAL* bmat, REAL* zmat,
+       const INTEGER ndim, REAL* sl, REAL* su, REAL* xnew,
+       REAL* xalt, REAL* d, REAL* vlag, REAL* w)
 {
   /* The arguments N, NPT, X, XL, XU, RHOBEG, RHOEND, IPRINT and MAXFUN are
      identical to the corresponding arguments in SUBROUTINE BOBYQA.
@@ -1265,10 +1265,10 @@ bobyqb(const INTEGER n, const INTEGER npt,
 
 static void
 altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
-       REAL *xopt, REAL *bmat, REAL *zmat, const INTEGER ndim,
-       REAL *sl, REAL *su, const INTEGER kopt, const INTEGER knew,
-       const REAL adelt, REAL *xnew, REAL *xalt, REAL *alpha,
-       REAL *cauchy, REAL *glag, REAL *hcol, REAL *w)
+       REAL* xopt, REAL* bmat, REAL* zmat, const INTEGER ndim,
+       REAL* sl, REAL* su, const INTEGER kopt, const INTEGER knew,
+       const REAL adelt, REAL* xnew, REAL* xalt, REAL* alpha,
+       REAL* cauchy, REAL* glag, REAL* hcol, REAL* w)
 {
   /* The arguments N, NPT, XPT, XOPT, BMAT, ZMAT, NDIM, SL and SU all have the
      same meanings as the corresponding arguments of BOBYQB.
@@ -1619,13 +1619,13 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
 
 static void
 prelim(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       REAL *x, const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       REAL* x, const REAL* xl, const REAL* xu,
        const REAL rhobeg, const INTEGER iprint,
-       const INTEGER maxfun, REAL *xbase, REAL *xpt, REAL *fval,
-       REAL *gopt, REAL *hq, REAL *pq, REAL *bmat,
-       REAL *zmat, const INTEGER ndim, REAL *sl, REAL *su,
-       INTEGER *nf, INTEGER *kopt)
+       const INTEGER maxfun, REAL* xbase, REAL* xpt, REAL* fval,
+       REAL* gopt, REAL* hq, REAL* pq, REAL* bmat,
+       REAL* zmat, const INTEGER ndim, REAL* sl, REAL* su,
+       INTEGER* nf, INTEGER* kopt)
 {
   /* The arguments N, NPT, X, XL, XU, RHOBEG, IPRINT and MAXFUN are the same as
      the corresponding arguments in SUBROUTINE BOBYQA.  The arguments XBASE,
@@ -1838,14 +1838,14 @@ prelim(const INTEGER n, const INTEGER npt,
 
 static void
 rescue(const INTEGER n, const INTEGER npt,
-       bobyca_calfun* calfun, void* data,
-       const REAL *xl, const REAL *xu,
+       bobyqa_calfun* calfun, void* data,
+       const REAL* xl, const REAL* xu,
        const INTEGER iprint, const INTEGER maxfun,
-       REAL *xbase, REAL *xpt, REAL *fval, REAL *xopt,
-       REAL *gopt, REAL *hq, REAL *pq, REAL *bmat, REAL *zmat,
-       const INTEGER ndim, REAL *sl, REAL *su, INTEGER *nf,
-       const REAL delta, INTEGER *kopt, REAL *vlag, REAL *ptsaux,
-       REAL *ptsid, REAL *w)
+       REAL* xbase, REAL* xpt, REAL* fval, REAL* xopt,
+       REAL* gopt, REAL* hq, REAL* pq, REAL* bmat, REAL* zmat,
+       const INTEGER ndim, REAL* sl, REAL* su, INTEGER* nf,
+       const REAL delta, INTEGER* kopt, REAL* vlag, REAL* ptsaux,
+       REAL* ptsid, REAL* w)
 {
   /* The arguments N, NPT, XL, XU, IPRINT, MAXFUN, XBASE, XPT, FVAL, XOPT,
      GOPT, HQ, PQ, BMAT, ZMAT, NDIM, SL and SU have the same meanings as the
@@ -2324,11 +2324,11 @@ rescue(const INTEGER n, const INTEGER npt,
 #undef XPT
 
 static void
-trsbox(const INTEGER n, const INTEGER npt, REAL *xpt,
-       REAL *xopt, REAL *gopt, REAL *hq, REAL *pq,
-       REAL *sl, REAL *su, const REAL delta, REAL *xnew,
-       REAL *d, REAL *gnew, REAL *xbdi, REAL *s,
-       REAL *hs, REAL *hred, REAL *dsq, REAL *crvmin)
+trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
+       REAL* xopt, REAL* gopt, REAL* hq, REAL* pq,
+       REAL* sl, REAL* su, const REAL delta, REAL* xnew,
+       REAL* d, REAL* gnew, REAL* xbdi, REAL* s,
+       REAL* hs, REAL* hred, REAL* dsq, REAL* crvmin)
 {
   /* The arguments N, NPT, XPT, XOPT, GOPT, HQ, PQ, SL and SU have the same
      meanings as the corresponding arguments of BOBYQB.
@@ -2802,9 +2802,9 @@ trsbox(const INTEGER n, const INTEGER npt, REAL *xpt,
 #undef XPT
 
 static void
-update(const INTEGER n, const INTEGER npt, REAL *bmat,
-       REAL *zmat, const INTEGER ndim, REAL *vlag, const REAL beta,
-       const REAL denom, const INTEGER knew, REAL *w)
+update(const INTEGER n, const INTEGER npt, REAL* bmat,
+       REAL* zmat, const INTEGER ndim, REAL* vlag, const REAL beta,
+       const REAL denom, const INTEGER knew, REAL* w)
 {
   /* The arrays BMAT and ZMAT are updated, as required by the new position
      of the interpolation point that has the index KNEW. The vector VLAG has
