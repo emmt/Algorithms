@@ -1,6 +1,6 @@
 .PHONY: clean test-orig test-f2c
 
-#---- Customization begin here.
+#---- Customizations begin here -----------------------------------------------
 
 # Compilers (only the C compiler is needed to build the library):
 CC = gcc
@@ -16,7 +16,11 @@ LDFLAGS =
 AR = ar
 ARFLAGS = rv
 
-#---- Customization end here.
+# Set the following to true/false depending whetehr your terminal does support
+# ANSI colors.
+COLOR = true
+
+#---- Customizations end here -------------------------------------------------
 
 srcdir=.
 TMPDIR = /tmp
@@ -74,9 +78,19 @@ ${NAME}-f2c: ${srcdir}/${NAME}-f2c.c
 
 test-f2c: ${NAME}-f2c.out ${NAME}-orig.out
 	@if diff $^ >${NAME}-f2c.diff; then \
-	    echo "test of F2C version successful"; \
+	    msg="test of F2C version successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test of F2C version failed (see file ${NAME}-f2c.diff)"; \
+	    msg="test of F2C version failed (see file ${NAME}-f2c.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
 
 
@@ -89,9 +103,18 @@ ${NAME}-test: ${NAME}-test.o
 	${CC} ${LDFLAGS} $< -o $@ -lm
 
 test-code: ${NAME}-test.out ${NAME}-orig.out
-	@if diff $^ >${NAME}-test.diff; then \
-	    echo "test of C version successful"; \
+	@if diff $^ >${NAME}-f2c.diff; then \
+	    msg="test of C version successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test of C version failed (see file ${NAME}-test.diff)"; \
+	    msg="test of C version failed (see file ${NAME}-f2c.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
-
