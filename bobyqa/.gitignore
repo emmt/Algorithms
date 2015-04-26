@@ -1,0 +1,10 @@
+# Original FORTRAN code by M.J.D. Powell is available
+# on request at mjdp@cam.ac.uk
+bobyqa.f
+
+# Output of tests.
+*.out
+*.diff
+bobyqa-f2c
+bobyqa-orig
+bobyqa-test
