@@ -5,16 +5,17 @@ minimizing a function of a few variables.  The method is *derivatives free*
 (only the function values are needed) and accounts for bound constraints on
 the variables.  The algorithm is described in:
 
->  M.J.D. Powell, "The NEWUOA Algorithm for Bound Constrained Optimization
->  Without Derivatives."  Technical report, Department of Applied Mathematics
->  and Theoretical Physics, University of Cambridge (2009).
+> M.J.D. Powell, "The NEWUOA software for unconstrained minimization
+> without derivatives", in Large-Scale Nonlinear Optimization, editors
+> G. Di Pillo and M. Roma, Springer (2006), pages 255-297.
 
-NEWUOA builds a quadratic model of the objective function from much less than
-`(N+1)(N+2)/2` values of the function (with `N` the number of variables).  The
-recommended number of points for building the quadratic model is `2*N+1`.  For
-smooth objective functions, NEWUOA is expected to be more efficient than COBYLA
-(which exploits a more simple linear model but implements arbitrary inequality
-constraints while NEWUOA is unconstrained).
+NEWUOA builds a quadratic model of the objective function from much less
+than `(N+1)(N+2)/2` values of the function (with `N` the number of
+variables).  The recommended number of points for building the quadratic
+model is `2*N+1`.  For smooth objective functions, NEWUOA is expected to be
+more efficient than COBYLA (which exploits a more simple linear model but
+implements arbitrary inequality constraints while NEWUOA is unconstrained).
+If you have bound constraints, you may consider using BOBYQA instead.
 
 In addition to being usable from C code, this version of NEWUOA has a few
 improvements over the FORTRAN version:
