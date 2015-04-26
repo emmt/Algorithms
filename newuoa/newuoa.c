@@ -24,6 +24,8 @@
 
 #include "newuoa.h"
 
+#define OUTPUT       stdout
+
 /* Macros to deal with single/double precision. */
 #undef REAL
 #ifdef SINGLE_PRECISION
@@ -292,8 +294,6 @@ trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
        const REAL delta, REAL* step, REAL* d, REAL* g,
        REAL* hd, REAL* hs, REAL* crvmin);
 
-#define OUTPUT       stdout
-
 static int
 newuob(const INTEGER n, const INTEGER npt,
        newuoa_objfun* objfun, void* data,
@@ -440,7 +440,7 @@ newuob(const INTEGER n, const INTEGER npt,
   nfm = nf;
   nfmm = nf - n;
   ++nf;
-  if (nfm <= n << 1) {
+  if (nfm <= 2*n) {
     if (nfm >= 1 && nfm <= n) {
       XPT(nf,nfm) = rhobeg;
     } else if (nfm > n) {
@@ -487,7 +487,7 @@ newuob(const INTEGER n, const INTEGER npt,
 
   /* Set the nonzero initial elements of BMAT and the quadratic model in the
      cases when NF is at most 2*N+1. */
-  if (nfm <= n << 1) {
+  if (nfm <= 2*n) {
     if (nfm >= 1 && nfm <= n) {
       gq[nfm] = (f - fbeg)/rhobeg;
       if (npt < nf + n) {
@@ -547,7 +547,7 @@ newuob(const INTEGER n, const INTEGER npt,
   knew = 0;
   trsapp(n, npt, &xopt[1], &XPT(1,1), &gq[1], &hq[1], &pq[1],
          delta, &d[1], &w[1], &w[np], &w[np + n],
-         &w[np + (n << 1)], &crvmin);
+         &w[np + 2*n], &crvmin);
   dsq = zero;
   LOOP(i,n) {
     dsq += d[i]*d[i];
@@ -950,10 +950,7 @@ newuob(const INTEGER n, const INTEGER npt,
   /* If a trust region step has provided a sufficient decrease in F, then
      branch for another trust region calculation. The case KSAVE>0 occurs when
      the new function value was calculated by a model step. */
-  if (f <= fsave + tenth*vquad) {
-    goto L100;
-  }
-  if (ksave > 0) {
+  if (f <= fsave + tenth*vquad || ksave > 0) {
     goto L100;
   }
 
@@ -984,10 +981,7 @@ newuob(const INTEGER n, const INTEGER npt,
     dsq = dstep*dstep;
     goto L120;
   }
-  if (ratio > zero) {
-    goto L100;
-  }
-  if (MAX(delta,dnorm) > rho) {
+  if (ratio > zero || MAX(delta,dnorm) > rho) {
     goto L100;
   }
 
