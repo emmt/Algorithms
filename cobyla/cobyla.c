@@ -269,16 +269,16 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     } else {
       SIM(jdrop,np) = X(jdrop);
       LOOP(k,mpp) {
-	DATMAT(k,jdrop) = DATMAT(k,np);
-	DATMAT(k,np) = CON(k);
+        DATMAT(k,jdrop) = DATMAT(k,np);
+        DATMAT(k,np) = CON(k);
       }
       LOOP(k,jdrop) {
-	temp = zero;
-	SIM(jdrop,k) = -rho;
-	for (i = k; i <= jdrop; ++i) {
-	  temp -= SIMI(i,k);
-	}
-	SIMI(jdrop,k) = temp;
+        temp = zero;
+        SIM(jdrop,k) = -rho;
+        for (i = k; i <= jdrop; ++i) {
+          temp -= SIMI(i,k);
+        }
+        SIMI(jdrop,k) = temp;
       }
     }
   }
@@ -318,8 +318,8 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
       SIM(i,np) += temp;
       tempa = zero;
       LOOP(k,n) {
-	SIM(i,k) -= temp;
-	tempa -= SIMI(k,i);
+        SIM(i,k) -= temp;
+        tempa -= SIMI(k,i);
       }
       SIMI(nbest,i) = tempa;
     }
@@ -332,7 +332,7 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     LOOP(j,n) {
       temp = (i == j ? -one : zero);
       LOOP(k,n) {
-	temp += SIMI(i,k)*SIM(k,j);
+        temp += SIMI(i,k)*SIM(k,j);
       }
       temp = ABS(temp);
       error = MAX(error, temp);
@@ -359,7 +359,7 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     LOOP(i,n) {
       temp = zero;
       LOOP(j,n) {
-	temp += W(j)*SIMI(j,i);
+        temp += W(j)*SIMI(j,i);
       }
       A(i,k) = (k == mp ? -temp : temp);
     }
@@ -396,8 +396,8 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
   if (jdrop == 0) {
     LOOP(j,n) {
       if (VSIG(j) < temp) {
-	jdrop = j;
-	temp = VSIG(j);
+        jdrop = j;
+        temp = VSIG(j);
       }
     }
   }
@@ -441,10 +441,10 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     if (j != jdrop) {
       temp = zero;
       LOOP(i,n) {
-	temp += SIMI(j,i)*DX(i);
+        temp += SIMI(j,i)*DX(i);
       }
       LOOP(i,n) {
-	SIMI(j,i) -= temp*SIMI(jdrop,i);
+        SIMI(j,i) -= temp*SIMI(jdrop,i);
       }
     }
     X(j) = SIM(j,np) + DX(j);
@@ -504,7 +504,7 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
       temp = DATMAT(mp,j) + parmu*DATMAT(mpp,j);
       if (temp < phi) goto L_140;
       if (temp == phi && parmu == zero) {
-	if (DATMAT(mpp,j) < DATMAT(mpp,np)) goto L_140;
+        if (DATMAT(mpp,j) < DATMAT(mpp,np)) goto L_140;
       }
     }
   }
@@ -552,16 +552,16 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     if (SIGBAR(j) >= parsig || SIGBAR(j) >= VSIG(j)) {
       temp = VETA(j);
       if (trured > zero) {
-	temp = zero;
-	LOOP(i,n) {
-	  REAL tempb = DX(i) - SIM(i,j);
-	  temp += tempb*tempb;
-	}
-	temp = SQRT(temp);
+        temp = zero;
+        LOOP(i,n) {
+          REAL tempb = DX(i) - SIM(i,j);
+          temp += tempb*tempb;
+        }
+        temp = SQRT(temp);
       }
       if (temp > edgmax) {
-	l = j;
-	edgmax = temp;
+        l = j;
+        edgmax = temp;
       }
     }
   }
@@ -581,10 +581,10 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
     if (j != jdrop) {
       temp = zero;
       LOOP(i,n) {
-	temp += SIMI(j,i)*DX(i);
+        temp += SIMI(j,i)*DX(i);
       }
       LOOP(i,n) {
-	SIMI(j,i) -= temp*SIMI(jdrop,i);
+        SIMI(j,i) -= temp*SIMI(jdrop,i);
       }
     }
   }
@@ -608,25 +608,25 @@ cobylb(const INTEGER n, const INTEGER m, const INTEGER mpp,
       REAL cmin, cmax, denom;
       denom = zero;
       LOOP(k,mp) {
-	cmax = cmin = DATMAT(k,np);
-	LOOP(i,n) {
+        cmax = cmin = DATMAT(k,np);
+        LOOP(i,n) {
           temp = DATMAT(k,i);
-	  cmin = MIN(cmin, temp);
-	  cmax = MAX(cmax, temp);
-	}
-	if (k <= m && cmin < FLT(0.5)*cmax) {
-	  temp = MAX(cmax, zero) - cmin;
-	  if (denom <= zero) {
-	    denom = temp;
-	  } else {
-	    denom = MIN(denom, temp);
-	  }
-	}
+          cmin = MIN(cmin, temp);
+          cmax = MAX(cmax, temp);
+        }
+        if (k <= m && cmin < FLT(0.5)*cmax) {
+          temp = MAX(cmax, zero) - cmin;
+          if (denom <= zero) {
+            denom = temp;
+          } else {
+            denom = MIN(denom, temp);
+          }
+        }
       }
       if (denom == zero) {
-	parmu = zero;
+        parmu = zero;
       } else if (cmax - cmin < parmu*denom) {
-	parmu = (cmax - cmin)/denom;
+        parmu = (cmax - cmin)/denom;
       }
     }
     if (iprint >= 2) {
@@ -954,16 +954,16 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     } else {
       SIM(jdrop,np) = X(jdrop);
       LOOP(k,mpp) {
-	DATMAT(k,jdrop) = DATMAT(k,np);
-	DATMAT(k,np) = CON(k);
+        DATMAT(k,jdrop) = DATMAT(k,np);
+        DATMAT(k,np) = CON(k);
       }
       LOOP(k,jdrop) {
-	temp = zero;
-	SIM(jdrop,k) = -rho;
-	for (i = k; i <= jdrop; ++i) {
-	  temp -= SIMI(i,k);
-	}
-	SIMI(jdrop,k) = temp;
+        temp = zero;
+        SIM(jdrop,k) = -rho;
+        for (i = k; i <= jdrop; ++i) {
+          temp -= SIMI(i,k);
+        }
+        SIMI(jdrop,k) = temp;
       }
     }
   }
@@ -1003,8 +1003,8 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
       SIM(i,np) += temp;
       tempa = zero;
       LOOP(k,n) {
-	SIM(i,k) -= temp;
-	tempa -= SIMI(k,i);
+        SIM(i,k) -= temp;
+        tempa -= SIMI(k,i);
       }
       SIMI(nbest,i) = tempa;
     }
@@ -1017,7 +1017,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     LOOP(j,n) {
       temp = (i == j ? -one : zero);
       LOOP(k,n) {
-	temp += SIMI(i,k)*SIM(k,j);
+        temp += SIMI(i,k)*SIM(k,j);
       }
       temp = ABS(temp);
       error = MAX(error, temp);
@@ -1027,7 +1027,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     ws->status = COBYLA_ROUNDING_ERRORS;
     if (ws->iprint >= 1) {
       fprintf(stderr, "Return from subroutine COBYLA because %s.\n",
-	      cobyla_reason(ws->status));
+              cobyla_reason(ws->status));
     }
     goto L_600;
   }
@@ -1044,7 +1044,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     LOOP(i,n) {
       temp = zero;
       LOOP(j,n) {
-	temp += W(j)*SIMI(j,i);
+        temp += W(j)*SIMI(j,i);
       }
       A(i,k) = (k == mp ? -temp : temp);
     }
@@ -1081,8 +1081,8 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   if (jdrop == 0) {
     LOOP(j,n) {
       if (VSIG(j) < temp) {
-	jdrop = j;
-	temp = VSIG(j);
+        jdrop = j;
+        temp = VSIG(j);
       }
     }
   }
@@ -1126,10 +1126,10 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     if (j != jdrop) {
       temp = zero;
       LOOP(i,n) {
-	temp += SIMI(j,i)*DX(i);
+        temp += SIMI(j,i)*DX(i);
       }
       LOOP(i,n) {
-	SIMI(j,i) -= temp*SIMI(jdrop,i);
+        SIMI(j,i) -= temp*SIMI(jdrop,i);
       }
     }
     X(j) = SIM(j,np) + DX(j);
@@ -1181,7 +1181,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
       temp = DATMAT(mp,j) + parmu*DATMAT(mpp,j);
       if (temp < phi) goto L_140;
       if (temp == phi && parmu == zero) {
-	if (DATMAT(mpp,j) < DATMAT(mpp,np)) goto L_140;
+        if (DATMAT(mpp,j) < DATMAT(mpp,np)) goto L_140;
       }
     }
   }
@@ -1229,16 +1229,16 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     if (SIGBAR(j) >= parsig || SIGBAR(j) >= VSIG(j)) {
       temp = VETA(j);
       if (trured > zero) {
-	temp = zero;
-	LOOP(i,n) {
-	  REAL tempb = DX(i) - SIM(i,j);
-	  temp += tempb*tempb;
-	}
-	temp = SQRT(temp);
+        temp = zero;
+        LOOP(i,n) {
+          REAL tempb = DX(i) - SIM(i,j);
+          temp += tempb*tempb;
+        }
+        temp = SQRT(temp);
       }
       if (temp > edgmax) {
-	l = j;
-	edgmax = temp;
+        l = j;
+        edgmax = temp;
       }
     }
   }
@@ -1258,10 +1258,10 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     if (j != jdrop) {
       temp = zero;
       LOOP(i,n) {
-	temp += SIMI(j,i)*DX(i);
+        temp += SIMI(j,i)*DX(i);
       }
       LOOP(i,n) {
-	SIMI(j,i) -= temp*SIMI(jdrop,i);
+        SIMI(j,i) -= temp*SIMI(jdrop,i);
       }
     }
   }
@@ -1285,25 +1285,25 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
       REAL cmin, cmax, denom;
       denom = zero;
       LOOP(k,mp) {
-	cmax = cmin = DATMAT(k,np);
-	LOOP(i,n) {
+        cmax = cmin = DATMAT(k,np);
+        LOOP(i,n) {
           temp = DATMAT(k,i);
-	  cmin = MIN(cmin, temp);
-	  cmax = MAX(cmax, temp);
-	}
-	if (k <= m && cmin < FLT(0.5)*cmax) {
-	  temp = MAX(cmax, zero) - cmin;
-	  if (denom <= zero) {
-	    denom = temp;
-	  } else {
-	    denom = MIN(denom, temp);
-	  }
-	}
+          cmin = MIN(cmin, temp);
+          cmax = MAX(cmax, temp);
+        }
+        if (k <= m && cmin < FLT(0.5)*cmax) {
+          temp = MAX(cmax, zero) - cmin;
+          if (denom <= zero) {
+            denom = temp;
+          } else {
+            denom = MIN(denom, temp);
+          }
+        }
       }
       if (denom == zero) {
-	parmu = zero;
+        parmu = zero;
       } else if (cmax - cmin < parmu*denom) {
-	parmu = (cmax - cmin)/denom;
+        parmu = (cmax - cmin)/denom;
       }
     }
     if (ws->iprint >= 2) {
@@ -1391,7 +1391,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
  * strictly less than RHO, then we use  the resultant freedom in DX to minimize
  * the objective function:
  *
- *	      -A(1,M+1)*DX(1)-A(2,M+1)*DX(2)-...-A(N,M+1)*DX(N)
+ *            -A(1,M+1)*DX(1)-A(2,M+1)*DX(2)-...-A(N,M+1)*DX(N)
  *
  * subject to no increase in  any greatest constraint violation.  This notation
  * allows the gradient of the objective function to be regarded as the gradient

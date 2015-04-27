@@ -48,7 +48,7 @@ extern "C" {
    CON is to store the M constraints.  DATA is anything needed by the function
    (unused by COBYLA itself). */
 typedef REAL cobyla_calcfc(INTEGER n, INTEGER m, const REAL x[],
-			   REAL con[], void* data);
+                           REAL con[], void* data);
 
 /*
  * This subroutine minimizes an objective function F(X) subject to M inequality
