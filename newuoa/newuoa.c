@@ -19,6 +19,16 @@
  * Read the accompanying `LICENSE` file for details.
  */
 
+/* To re-use as much as the code for the reverse communication routines, we use
+   a trick which consists in "self-including" this file with different macros
+   (_NEWUOA_PART1, _NEWUOA_PART2, etc.) defined so as to skip or modify certain
+   parts of the source file. */
+#ifndef _NEWUOA_PART1
+#define _NEWUOA_PART1 1
+
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -202,6 +212,31 @@ newuob(const INTEGER n, const INTEGER npt,
        REAL* pq, REAL* bmat, REAL* zmat, const INTEGER ndim,
        REAL* d, REAL* vlag, REAL* w);
 
+static void
+bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
+       REAL* xpt, REAL* bmat, REAL* zmat, const INTEGER idz,
+       const INTEGER ndim, const INTEGER kopt, const INTEGER knew, REAL* d,
+       REAL* w, REAL* vlag, REAL* beta, REAL* s,
+       REAL* wvec, REAL* prod);
+
+static void
+biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
+       REAL* xpt, REAL* bmat, REAL* zmat, INTEGER* idz,
+       const INTEGER ndim, const INTEGER knew, const REAL delta, REAL* d,
+       REAL* alpha, REAL* hcol, REAL* gc, REAL* gd,
+       REAL* s, REAL* w);
+
+static void
+update(const INTEGER n, const INTEGER npt, REAL* bmat,
+       REAL* zmat, INTEGER* idz, const INTEGER ndim, REAL* vlag,
+       const REAL beta, const INTEGER knew, REAL* w);
+
+static void
+trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
+       REAL* xpt, REAL* gq, REAL* hq, REAL* pq,
+       const REAL delta, REAL* step, REAL* d, REAL* g,
+       REAL* hd, REAL* hs, REAL* crvmin);
+
 int
 newuoa(const INTEGER n, const INTEGER npt,
        newuoa_objfun* objfun, void* data,
@@ -215,15 +250,15 @@ newuoa(const INTEGER n, const INTEGER npt,
   /* Partition the working space array, so that different parts of it can be
      treated separately by the subroutine that performs the main
      calculation. */
-  np = n + 1;
-  nptm = npt - np;
-  if (npt < n + 2 || npt > (n + 2)*np/2) {
+  if (npt < n + 2 || npt > (n + 2)*(n + 1)/2) {
     if (iprint > 0) {
       print_error("NPT is not in the required interval");
     }
     return NEWUOA_BAD_NPT;
   }
   ndim = npt + n;
+  np = n + 1;
+  nptm = npt - np;
   ixb = 0; /* C-indices start at 0 */
   ixo = ixb + n;
   ixn = ixo + n;
@@ -267,35 +302,249 @@ newuoa_(const INTEGER* n, const INTEGER* npt, REAL* x,
 }
 
 /*---------------------------------------------------------------------------*/
+/* REVERSE COMMUNICATION VERSION */
+
+struct _newuoa_context {
+  /* Constants during the iterations. */
+  INTEGER n;
+  INTEGER npt;
+  REAL rhobeg;
+  REAL rhoend;
+  INTEGER iprint;
+  INTEGER maxfun;
+
+  /* Floating-point local variables. */
+  REAL alpha;
+  REAL beta;
+  REAL crvmin;
+  REAL delta;
+  REAL diff;
+  REAL diffa;
+  REAL diffb;
+  REAL diffc;
+  REAL dnorm;
+  REAL dsq;
+  REAL dstep;
+  REAL fbeg;
+  REAL fopt;
+  REAL gqsq;
+  REAL ratio;
+  REAL recip;
+  REAL reciq;
+  REAL rho;
+  REAL rhosq;
+  REAL vquad;
+  REAL xipt;
+  REAL xjpt;
+  REAL xoptsq;
+
+  /* Workspace arrays (all constants). */
+  REAL* xbase;
+  REAL* xopt;
+  REAL* xnew;
+  REAL* xpt;
+  REAL* fval;
+  REAL* gq;
+  REAL* hq;
+  REAL* pq;
+  REAL* bmat;
+  REAL* zmat;
+  REAL* d;
+  REAL* vlag;
+  REAL* w;
+
+  /* Integer local variables. */
+  INTEGER idz;
+  INTEGER ih;
+  INTEGER ipt;
+  INTEGER itest;
+  INTEGER jpt;
+  INTEGER knew;
+  INTEGER kopt;
+  INTEGER ksave;
+  INTEGER nf;
+  INTEGER nfm;
+  INTEGER nfmm;
+  INTEGER nfsav;
+
+  /* Record the current state of the algorithm. */
+  INTEGER nevals;
+  int status;
+};
+
+#define SAVE(var)     ctx->var = var
+#define RESTORE(var)  var = ctx->var
+
+/* FIXME: remove maxfun, replace nevals by nf? */
+newuoa_context_t*
+newuoa_create(const INTEGER n, const INTEGER npt,
+              const REAL rhobeg, const REAL rhoend,
+              const INTEGER iprint, const INTEGER maxfun)
+{
+  INTEGER np, nptm, ndim;
+  newuoa_context_t* ctx;
+  size_t size, offset;
+
+  /* Check arguments. */
+  if (n < 0) {
+    if (iprint > 0) {
+      print_error("invalid number of variables N");
+    }
+    errno = EINVAL;
+    return NULL;
+  }
+  if (npt < n + 2 || npt > (n + 2)*(n + 1)/2) {
+    if (iprint > 0) {
+      print_error("NPT is not in the required interval");
+    }
+    return NULL;
+  }
+  if (rhobeg <= rhoend || rhoend <= 0) {
+    if (iprint > 0) {
+      print_error("invalid RHOBEG and/or RHOEND");
+    }
+    errno = EINVAL;
+    return NULL;
+  }
+  if (maxfun < 1) {
+    if (iprint > 0) {
+      print_error("invalid MAXFUN");
+    }
+    errno = EINVAL;
+    return NULL;
+  }
+
+  /* Allocate memory. */
+  size = sizeof(newuoa_context_t);
+  offset = ROUND_UP(size, sizeof(REAL));
+  size = offset + ((npt+13)*(npt+n)+3*n*(n+3)/2)*sizeof(REAL);
+  ctx = (newuoa_context_t*)malloc(size);
+  if (ctx == NULL) {
+    return NULL;
+  }
+  memset(ctx, 0, size);
+  SAVE(n);
+  SAVE(npt);
+  SAVE(rhobeg);
+  SAVE(rhoend);
+  SAVE(iprint);
+  SAVE(maxfun);
+
+  /* Partition the working space array, so that different parts of it can be
+     treated separately by the subroutine that performs the main
+     calculation. */
+  ndim = npt + n;
+  np = n + 1;
+  nptm = npt - np;
+  ctx->xbase = ADDRESS(REAL, ctx, offset);
+  ctx->xopt  = ctx->xbase + n;
+  ctx->xnew  = ctx->xopt + n;
+  ctx->xpt   = ctx->xnew + n;
+  ctx->fval  = ctx->xpt + n*npt;
+  ctx->gq    = ctx->fval + npt;
+  ctx->hq    = ctx->gq + n;
+  ctx->pq    = ctx->hq + n*np/2;
+  ctx->bmat  = ctx->pq + npt;
+  ctx->zmat  = ctx->bmat + ndim*n;
+  ctx->d     = ctx->zmat + npt*nptm;
+  ctx->vlag  = ctx->d + n;
+  ctx->w     = ctx->vlag + ndim;
+
+  /* Return context ready for the first iteration. */
+  ctx->status = NEWUOA_ITERATE;
+  return ctx;
+
+} /* newuoa_create */
+
+void
+newuoa_delete(newuoa_context_t* ctx)
+{
+  if (ctx != NULL) {
+    free((void*)ctx);
+  }
+}
+
+int
+newuoa_restart(newuoa_context_t* ctx)
+{
+  if (ctx == NULL) {
+    errno = EFAULT;
+    return NEWUOA_BAD_ADDRESS;
+  }
+  ctx->nevals = 0;
+  ctx->status = NEWUOA_ITERATE;
+  return ctx->status;
+}
+
+int
+newuoa_get_status(const newuoa_context_t* ctx)
+{
+  if (ctx == NULL) {
+    errno = EFAULT;
+    return NEWUOA_BAD_ADDRESS;
+  }
+  return ctx->status;
+}
+
+INTEGER
+newuoa_get_nevals(const newuoa_context_t* ctx)
+{
+  if (ctx == NULL) {
+    errno = EFAULT;
+    return -1;
+  }
+  return ctx->nevals;
+}
+
+REAL
+newuoa_get_rho(const newuoa_context_t* ctx)
+{
+  if (ctx == NULL) {
+    errno = EFAULT;
+    return -1;
+  }
+  return ctx->rho;
+}
+
+const char* newuoa_reason(int status)
+{
+  switch (status) {
+  case NEWUOA_ITERATE:
+    return "caller is requested to evaluate the objective function";
+  case NEWUOA_SUCCESS:
+    return "algorithm converged";
+  case NEWUOA_BAD_NPT:
+    return "NPT is not in the required interval";
+  case NEWUOA_ROUNDING_ERRORS:
+    return "too much cancellation in a denominator";
+  case NEWUOA_TOO_MANY_EVALUATIONS:
+    return "maximum number of function evaluations exceeded";
+  case NEWUOA_STEP_FAILED:
+    return "trust region step has failed to reduce quadratic approximation";
+  case NEWUOA_BAD_ADDRESS:
+    return "illegal NULL address";
+  case NEWUOA_CORRUPTED:
+    return "corrupted or misused workspace";
+  default:
+    return "unknown status";
+  }
+}
+
+/* Include this file with the macro _NEWUOA_REVCOM defined to
+   generate the code `newuoa_iterate` in place of `newuob`. */
+#define _NEWUOA_REVCOM 1
+#include __FILE__
+#undef _NEWUOA_REVCOM
+
+#endif /* _NEWUOA_PART1 */
+
+/*---------------------------------------------------------------------------*/
 /* NEWUOA SUBROUTINES */
 
-static void
-bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
-       REAL* xpt, REAL* bmat, REAL* zmat, const INTEGER idz,
-       const INTEGER ndim, const INTEGER kopt, const INTEGER knew, REAL* d,
-       REAL* w, REAL* vlag, REAL* beta, REAL* s,
-       REAL* wvec, REAL* prod);
-
-static void
-biglag(const INTEGER n, const INTEGER npt, REAL* xopt,
-       REAL* xpt, REAL* bmat, REAL* zmat, INTEGER* idz,
-       const INTEGER ndim, const INTEGER knew, const REAL delta, REAL* d,
-       REAL* alpha, REAL* hcol, REAL* gc, REAL* gd,
-       REAL* s, REAL* w);
-
-static void
-update(const INTEGER n, const INTEGER npt, REAL* bmat,
-       REAL* zmat, INTEGER* idz, const INTEGER ndim, REAL* vlag,
-       const REAL beta, const INTEGER knew, REAL* w);
-
-static void
-trsapp(const INTEGER n, const INTEGER npt, REAL* xopt,
-       REAL* xpt, REAL* gq, REAL* hq, REAL* pq,
-       const REAL delta, REAL* step, REAL* d, REAL* g,
-       REAL* hd, REAL* hs, REAL* crvmin);
-
-static int
-newuob(const INTEGER n, const INTEGER npt,
+#ifdef _NEWUOA_REVCOM
+int newuoa_iterate(newuoa_context_t* ctx, REAL f, REAL* x)
+#else
+static int newuob(const INTEGER n, const INTEGER npt,
        newuoa_objfun* objfun, void* data,
        REAL* x, const REAL rhobeg, const REAL rhoend,
        const INTEGER iprint, const INTEGER maxfun,
@@ -303,6 +552,7 @@ newuob(const INTEGER n, const INTEGER npt,
        REAL* xpt, REAL* fval, REAL* gq, REAL* hq,
        REAL* pq, REAL* bmat, REAL* zmat, const INTEGER ndim,
        REAL* d, REAL* vlag, REAL* w)
+#endif /* _NEWUOA_REVCOM */
 {
   /* The arguments N, NPT, X, RHOBEG, RHOEND, IPRINT and MAXFUN are identical
      to the corresponding arguments in SUBROUTINE NEWUOA.
@@ -351,38 +601,90 @@ newuob(const INTEGER n, const INTEGER npt,
 
   /* Local variables. */
   REAL alpha, beta, crvmin, delta, diff, diffa, diffb, diffc, dnorm, dsq,
-    dstep, f, fbeg, fopt, gqsq, ratio, recip, reciq, rho, rhosq, vquad
-    , xipt, xjpt, xoptsq;
-  INTEGER idz, ih, ipt, itest, jpt, knew, kopt,
-    ksave, nf, nfm, nfmm, nfsav, nftest, nh, np, nptm;
-  int status;
+    dstep, fbeg, fopt, gqsq, ratio, recip, reciq, rho, rhosq, vquad,
+    xipt, xjpt, xoptsq;
+#ifdef _NEWUOA_REVCOM
+  REAL rhobeg, rhoend;
+#else
+  REAL f;
+#endif
   const char* reason;
+#ifdef _NEWUOA_REVCOM
+  REAL *xbase, *xopt, *xnew, *xpt, *fval, *gq, *hq, *pq, *bmat, *zmat,
+    *d, *vlag, *w;
+#endif
+  INTEGER idz, ih, ipt, itest, jpt, knew, kopt,
+    ksave, nf, nfm, nfmm, nfsav, nh, np, nptm;
+#ifdef _NEWUOA_REVCOM
+  INTEGER n, npt, ndim, iprint, maxfun;
+#endif
+  int status;
 
   /* Temporary variables (these variables do not have to be saved in the
      reverse communication version of the algorithm). */
   REAL bsum, detrat, distsq, dx, fsave, temp, tempa, tempb;
   INTEGER i, j, k, ktemp;
 
-  /* Parameter adjustments to comply with FORTRAN indexing. */
-  x     -= 1;
-  xbase -= 1;
-  xopt  -= 1;
-  xnew  -= 1;
-  xpt   -= 1 + npt;
-  fval  -= 1;
-  gq    -= 1;
-  hq    -= 1;
-  pq    -= 1;
-  bmat  -= 1 + ndim;
-  zmat  -= 1 + npt;
-  d     -= 1;
-  vlag  -= 1;
-  w     -= 1;
-#define XPT(a1,a2) xpt[(a2)*npt + a1]
-#define BMAT(a1,a2) bmat[(a2)*ndim + a1]
-#define ZMAT(a1,a2) zmat[(a2)*npt + a1]
+#ifdef _NEWUOA_REVCOM
+  /* Minimal checking (FIXME: print?). */
+  if (ctx == NULL) {
+    return NEWUOA_BAD_ADDRESS;
+  }
+  if (x == NULL) {
+    ctx->status = NEWUOA_BAD_ADDRESS;
+    return ctx->status;
+  }
+  if (ctx->status != NEWUOA_ITERATE) {
+    ctx->status = NEWUOA_CORRUPTED;
+    return ctx->status;
+  }
 
-  /* FIXME: Set uninitialized variables. */
+  /* Restore local variables. */
+  RESTORE(n);
+  RESTORE(npt);
+  RESTORE(rhobeg);
+  RESTORE(rhoend);
+  RESTORE(iprint);
+  RESTORE(maxfun);
+  RESTORE(alpha);
+  RESTORE(beta);
+  RESTORE(crvmin);
+  RESTORE(delta);
+  RESTORE(diff);
+  RESTORE(diffa);
+  RESTORE(diffb);
+  RESTORE(diffc);
+  RESTORE(dnorm);
+  RESTORE(dsq);
+  RESTORE(dstep);
+  RESTORE(fbeg);
+  RESTORE(fopt);
+  RESTORE(gqsq);
+  RESTORE(ratio);
+  RESTORE(recip);
+  RESTORE(reciq);
+  RESTORE(rho);
+  RESTORE(rhosq);
+  RESTORE(vquad);
+  RESTORE(xipt);
+  RESTORE(xjpt);
+  RESTORE(xoptsq);
+  RESTORE(idz);
+  RESTORE(ih);
+  RESTORE(ipt);
+  RESTORE(itest);
+  RESTORE(jpt);
+  RESTORE(knew);
+  RESTORE(kopt);
+  RESTORE(ksave);
+  RESTORE(nf);
+  RESTORE(nfm);
+  RESTORE(nfmm);
+  RESTORE(nfsav);
+  RESTORE(status);
+  ndim = npt + n;
+#else
+  /* Set uninitialized variables. */
   idz = 0;
   ipt = 0;
   itest = 0;
@@ -403,14 +705,63 @@ newuob(const INTEGER n, const INTEGER npt,
   ratio = zero;
   rho = zero;
   xoptsq = zero;
+#endif
 
   /* Initialization. */
   np = n + 1;
   nh = n*np/2;
   nptm = npt - np;
-  nftest = MAX(maxfun,1);
-  status = NEWUOA_SUCCESS;
   reason = NULL;
+
+  /* Parameter adjustments and macros to comply with FORTRAN indexing. */
+#ifdef _NEWUOA_REVCOM
+  x     -= 1;
+  xbase  = ctx->xbase -  1;
+  xopt   = ctx->xopt  -  1;
+  xnew   = ctx->xnew  -  1;
+  xpt    = ctx->xpt   - (1 + npt);
+  fval   = ctx->fval  -  1;
+  gq     = ctx->gq    -  1;
+  hq     = ctx->hq    -  1;
+  pq     = ctx->pq    -  1;
+  bmat   = ctx->bmat  - (1 + ndim);
+  zmat   = ctx->zmat  - (1 + npt);
+  d      = ctx->d     -  1;
+  vlag   = ctx->vlag  -  1;
+  w      = ctx->w     -  1;
+#else
+  x     -= 1;
+  xbase -= 1;
+  xopt  -= 1;
+  xnew  -= 1;
+  xpt   -= 1 + npt;
+  fval  -= 1;
+  gq    -= 1;
+  hq    -= 1;
+  pq    -= 1;
+  bmat  -= 1 + ndim;
+  zmat  -= 1 + npt;
+  d     -= 1;
+  vlag  -= 1;
+  w     -= 1;
+#endif
+#define XPT(a1,a2) xpt[(a2)*npt + a1]
+#define BMAT(a1,a2) bmat[(a2)*ndim + a1]
+#define ZMAT(a1,a2) zmat[(a2)*npt + a1]
+
+#ifdef _NEWUOA_REVCOM
+  /* Increment the number of function evaluation and, if this is not the first
+     evaluation: branch to the code where the function value was requested. */
+  if (++ctx->nevals > 1) {
+    goto new_eval;
+  }
+
+  /* Must be first function evaluation. */
+  if (ctx->nevals != 1) {
+    ctx->status = NEWUOA_CORRUPTED;
+    return ctx->status;
+  }
+#endif
 
   /* Set the initial elements of XPT, BMAT, HQ, PQ and ZMAT to zero. */
   LOOP(j,n) {
@@ -739,13 +1090,24 @@ newuob(const INTEGER n, const INTEGER npt,
   }
   ++nf;
  L310:
-  if (nf > nftest) {
+  if (nf > MAX(maxfun,1)) {
     --nf;
     reason = "CALFUN has been called MAXFUN times";
     status = NEWUOA_TOO_MANY_EVALUATIONS;
     goto done;
   }
+
+#ifdef _NEWUOA_REVCOM
+  /* Request a new function evaluation from the caller and branch to save
+     local variables in the context structure. */
+  status = NEWUOA_ITERATE;
+  goto save;
+
+  /* We arrive here when caller has computed a new function value. */
+ new_eval:
+#else
   f = objfun(n, &x[1], data);
+#endif
   if (iprint == 3) {
     fprintf(OUTPUT, "\n"
             "    Function number%6ld    F =%18.10E"
@@ -757,6 +1119,7 @@ newuob(const INTEGER n, const INTEGER npt,
     goto L70;
   }
   if (knew == -1) {
+    status = NEWUOA_SUCCESS;
     goto done;
   }
 
@@ -1026,6 +1389,7 @@ newuob(const INTEGER n, const INTEGER npt,
   if (knew == -1) {
     goto L290;
   }
+  status = NEWUOA_SUCCESS;
  done:
   if (fopt <= f) {
     LOOP(i,n) {
@@ -1042,16 +1406,62 @@ newuob(const INTEGER n, const INTEGER npt,
               "    The corresponding X is:\n",
               (long)nf, (double)f);
       print_x(OUTPUT, n, &x[1], NULL);
-    } else {
+    } else if (reason != NULL) {
       print_error(reason);
     }
   }
+
+#ifdef _NEWUOA_REVCOM
+  /* Save local variables. */
+ save:
+  SAVE(alpha);
+  SAVE(beta);
+  SAVE(crvmin);
+  SAVE(delta);
+  SAVE(diff);
+  SAVE(diffa);
+  SAVE(diffb);
+  SAVE(diffc);
+  SAVE(dnorm);
+  SAVE(dsq);
+  SAVE(dstep);
+  SAVE(fbeg);
+  SAVE(fopt);
+  SAVE(gqsq);
+  SAVE(ratio);
+  SAVE(recip);
+  SAVE(reciq);
+  SAVE(rho);
+  SAVE(rhosq);
+  SAVE(vquad);
+  SAVE(xipt);
+  SAVE(xjpt);
+  SAVE(xoptsq);
+  SAVE(idz);
+  SAVE(ih);
+  SAVE(ipt);
+  SAVE(itest);
+  SAVE(jpt);
+  SAVE(knew);
+  SAVE(kopt);
+  SAVE(ksave);
+  SAVE(nf);
+  SAVE(nfm);
+  SAVE(nfmm);
+  SAVE(nfsav);
+  SAVE(status);
+#endif  /* _NEWUOA_REVCOM */
+
+  /* Return current status. */
   return status;
-} /* newuob */
+}
 
 #undef ZMAT
 #undef BMAT
 #undef XPT
+
+#ifndef _NEWUOA_PART2
+#define _NEWUOA_PART2 1
 
 static void
 bigden(const INTEGER n, const INTEGER npt, REAL* xopt,
@@ -2159,6 +2569,8 @@ print_x(FILE* output, INTEGER n, const REAL x[], const REAL dx[])
             ((i == n - 1 || i%5 == 4) ? "\n" : ""));
   }
 }
+
+#endif /* _NEWUOA_PART2 */
 
 /*
  * Local Variables:

@@ -42,11 +42,10 @@ extern "C" {
 #endif
 
 /* Prototype of the objective function assumed by the NEWUOA routine.  The
-   returned value is the function value at X the current variables, N is the
-   number of variables and DATA is anything needed by the function (unused by
-   NEWUOA itself). */
+   returned value is the function value at X, the current variables, N is the
+   number of variables and DATA is anything else needed by the objective
+   function (unused by NEWUOA itself). */
 typedef REAL newuoa_objfun(const INTEGER n, const REAL *x, void* data);
-
 
 /* This subroutine seeks the least value of a function of many variables, by
    a trust region method that forms quadratic models by interpolation.  There
@@ -58,6 +57,10 @@ typedef REAL newuoa_objfun(const INTEGER n, const REAL *x, void* data);
    N must be set to the number of variables and must be at least two.  NPT is
    the number of interpolation conditions. Its value must be in the interval
    [N+2,(N+1)(N+2)/2].
+
+   Function OBJFUN(N,X,DATA) must be provided by the user to compute the value
+   of the objective function for the variables X(1),X(2),...,X(N).  DATA is
+   anything else needed by the objective function.
 
    Initial values of the variables must be set in X(1),X(2),...,X(N). They
    will be changed to the values that give the least calculated F.  RHOBEG
@@ -78,9 +81,8 @@ typedef REAL newuoa_objfun(const INTEGER n, const REAL *x, void* data);
    The array W will be used for working space. Its length must be at least
    (NPT+13)*(NPT+N)+3*N*(N+3)/2.
 
-   SUBROUTINE CALFUN (N,X,F) must be provided by the user. It must set F to
-   the value of the objective function for the variables X(1),X(2),...,X(N).
-  */
+   The returned value should be NEWUOA_SUCCESS, but a different value can be
+   returned upon error (see `newuoa_reason` for an explanatory message). */
 extern int newuoa(const INTEGER n, const INTEGER npt,
                   newuoa_objfun* objfun, void* data,
                   REAL* x, const REAL rhobeg, const REAL rhoend,
@@ -89,17 +91,90 @@ extern int newuoa(const INTEGER n, const INTEGER npt,
 
 
 /* Possible values returned by NEWUOA. */
-#define NEWUOA_SUCCESS                 (0) /* algorithm converged */
-#define NEWUOA_BAD_NPT                (-1) /* NPT is not in the required
-                                              interval */
-#define NEWUOA_TOO_CLOSE              (-2) /* insufficient space between the
-                                              bounds */
-#define NEWUOA_ROUNDING_ERRORS        (-3) /* too much cancellation in a
-                                              denominator */
-#define NEWUOA_TOO_MANY_EVALUATIONS   (-4) /* maximum number of function
-                                              evaluations exceeded */
-#define NEWUOA_STEP_FAILED            (-5) /* a trust region step has failed to
-                                              reduce Q */
+#define NEWUOA_ITERATE               (1) /* caller is requested to evaluate
+                                            the objective function and call
+                                            newuoa_iterate */
+#define NEWUOA_SUCCESS               (0) /* algorithm converged */
+#define NEWUOA_BAD_NPT              (-1) /* NPT is not in the required
+                                            interval */
+#define NEWUOA_ROUNDING_ERRORS      (-2) /* too much cancellation in a
+                                            denominator */
+#define NEWUOA_TOO_MANY_EVALUATIONS (-3) /* maximum number of function
+                                            evaluations exceeded */
+#define NEWUOA_STEP_FAILED          (-4) /* trust region step has failed to
+                                            reduce quadratic approximation */
+#define NEWUOA_BAD_ADDRESS          (-5) /* illegal NULL address */
+#define NEWUOA_CORRUPTED            (-6) /* corrupted or misused workspace */
+
+/* Get a textual explanation of the status returned by NEWUOA. */
+extern const char* newuoa_reason(int status);
+
+/*---------------------------------------------------------------------------*/
+/* REVERSE COMMUNICATION VERSION */
+
+/* Opaque structure used by the reverse communication version of NEWUOA. */
+typedef struct _newuoa_context newuoa_context_t;
+
+/* Allocate a new reverse communication workspace for NEWUOA algorithm.  The
+   returned address is `NULL` to indicate an error: either invalid parameters
+   (external variable `errno` set to `EINVAL`), or insufficient memory
+   (external variable `errno` set to `ENOMEM`).  When no longer needed, the
+   workspace must be deleted with `newuoa_delete`.
+
+   A typical usage is:
+   ```
+   REAL x[N], f;
+   newuoa_context_t* ctx;
+   x[...] = ...; // initial solution
+   ctx = newuoa_create(N, NPT, RHOBEG, RHOEND, IPRINT, MAXFUN);
+   status = newuoa_get_status(ctx);
+   while (status == NEWUOA_ITERATE) {
+     f = ...; // compute function value at X
+     status = newuoa_iterate(ctx, f, x);
+   }
+   newuoa_delete(ctx);
+   if (status != NEWUOA_SUCCESS) {
+     fprintf(stderr, "Something wrong occured in NEWUOA: %s\n",
+             newuoa_reason(status));
+   }
+   ```
+ */
+extern newuoa_context_t*
+newuoa_create(const INTEGER n, const INTEGER npt,
+              const REAL rhobeg, const REAL rhoend,
+              const INTEGER iprint, const INTEGER maxfun);
+
+/* Release ressource allocated for NEWUOA reverse communication workspace.
+   Argument can be `NULL`. */
+extern void newuoa_delete(newuoa_context_t* ctx);
+
+/* Perform the next iteration of the reverse communication version of the
+   NEWUOA algorithm.  On entry, the wokspace status must be `NEWUOA_ITERATE`,
+   `f` is the function value at `x`.  On exit, the returned value (the new
+   wokspace status) is: `NEWUOA_ITERATE` if a new trial point has been stored
+   in `x` and if user is requested to compute the function value for the new
+   point; `NEWUOA_SUCCESS` if algorithm has converged; anything else indicate
+   an error (see `newuoa_reason` for an explanatory message). */
+extern int newuoa_iterate(newuoa_context_t* ctx, REAL f, REAL* x);
+
+/* Restart NEWUOA algorithm using the same parameters.  The return value is the
+   new status of the algorithm, see `newuoa_get_status` for details. */
+extern int newuoa_restart(newuoa_context_t* ctx);
+
+/* Get the current status of the algorithm.  Result is: `NEWUOA_ITERATE` if
+   user is requested to compute F(X); `NEWUOA_SUCCESS` if algorithm has
+   converged; anything else indicate an error (see `newuoa_reason` for an
+   explanatory message). */
+extern int newuoa_get_status(const newuoa_context_t* ctx);
+
+/* Get the current number of function evaluations.  Result is -1 if something
+   is wrong (e.g. CTX is NULL), nonnegative otherwise. */
+extern INTEGER newuoa_get_nevals(const newuoa_context_t* ctx);
+
+/* Get the current size of the trust region.  Result is 0 if algorithm not yet
+   started (before first iteration), -1 if something is wrong (e.g. CTX is
+   NULL), strictly positive otherwise. */
+extern REAL newuoa_get_rho(const newuoa_context_t* ctx);
 
 /*---------------------------------------------------------------------------*/
 /* FORTRAN WRAPPER */
