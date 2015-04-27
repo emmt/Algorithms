@@ -27,6 +27,10 @@ improvements over the FORTRAN version:
 * a return code indicates the success of the method or the reason of the
   failure;
 
+* reverse communication version of the algorithm is also provided, this
+  version is exploited by the Yorick plgin in directory
+  [`yorick`](./yorick);
+
 * no warnings about variables being uninitialized.
 
 Of course, this version produces the same output for the tests and it has a
