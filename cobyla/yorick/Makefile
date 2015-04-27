@@ -84,7 +84,10 @@ cobyla.o: ../cobyla.c ../cobyla.h
 
 ycobyla.o: ycobyla.c ../cobyla.h
 
-test: cobyla-yor.out ../cobyla-orig.out
+cobyla-yor.out: cobyla.i cobyla-test.i $(PKG_DLL)
+	$(Y_EXE) -batch cobyla-test.i >$@
+
+test: cobyla-yor.out ../cobyla-orig-double.out
 	@if diff $^ >cobyla-yor.diff; then \
 	    msg="test of Yorick plugin successful"; \
 	    if ${COLOR}; then \
