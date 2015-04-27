@@ -2,6 +2,9 @@
 # on request at mjdp@cam.ac.uk
 newuoa.f
 
+# Files automatically produced by f2c.
+newuoa-f2c.c
+
 # Output of tests.
 *.out
 *.diff
