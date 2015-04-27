@@ -1,0 +1,15 @@
+#! /bin/sed -f
+#
+# This SED script is a filter to Yorick Makefile.  The following
+# operations are performed:
+#   - Trailing spaces are removed.
+#   - Tabulations are left unchanged (this is intended for Makefiles).
+#   - Unix-like end of line markers are used (LF).
+#   - Macros like Y_HOME which are overwritten by 'yorick -batch make.i' are
+#     cleared.
+#
+s/\x0d$//
+s/ *$//
+s/ *\x0d/\x0a/g
+s/^\( *Y_\(MAKEDIR\|EXE\(\|_PKGS\|_HOME\|_SITE\)\|HOME_PKG\) *=\).*/\1/
+#

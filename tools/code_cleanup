@@ -1,0 +1,29 @@
+#! /bin/sh
+#
+# This script is a filter to cleanup text or code files.  The following
+# operations are performed:
+#   - Trailing spaces are removed.
+#   - Unix-like end of line markers are used (LF).
+#   - Leading tabulations are replaced by spaces.
+#
+
+debug=no
+bypass=no
+
+if test "$debug" = "yes"; then
+  echo >&2 "command -----> $0 $@"
+fi
+
+# Simply execute "cat" to bypass the filter:
+test "$bypass" = "yes" && exec cat
+
+expand --initial --tabs=8 \
+  | sed -e 's/\x0d$//;s/[ 	]*$//;s/[ 	]*\x0d/\x0a/g'
+
+# Local Variables:
+# mode: sh
+# tab-width: 8
+# indent-tabs-mode: nil
+# fill-column: 78
+# coding: utf-8
+# End:

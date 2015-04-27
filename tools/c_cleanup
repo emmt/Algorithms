@@ -1,0 +1,79 @@
+#! /bin/sh
+#
+# This script is a filter to cleanup C/C++ files.  The following
+# operations are performed:
+#  - Trailing spaces are removed.
+#  - Unix-like end of line markers are used (LF).
+#  - Code is re-indented by AStyle.
+#
+# Note that the filter is called for every 'git-add', 'git-status', etc.
+# So it is better if it is fast...
+
+debug=no
+bypass=no
+
+if test "$debug" = "yes"; then
+  echo >&2 "command -----> $0 $@"
+fi
+
+# Simply execute "cat" to bypass the filter:
+test "$bypass" = "yes" && exec cat
+
+## AStyle options:
+astyle=/usr/bin/astyle
+options="--options=none --mode=c --quiet --preserve-date \
+  --style=stroustrup --indent=spaces=2 \
+  --pad-header --indent-labels --lineend=linux \
+  --min-conditional-indent=0 --max-instatement-indent=80 \
+  --keep-one-line-blocks --keep-one-line-statements \
+  --align-pointer=name"
+# --suffix=none 
+
+## Option --align-reference=... is only available after version 2.02.
+version=$($astyle --version 2>&1 \
+  | sed 's/^[^0-9]*\([.0-9]*\).*/\1/;s/0*\([1-9][0-9]*\|0\)/\1/g')
+if test "$debug" = "yes"; then
+  echo >&2 "version -----> $version"
+fi
+major=$(echo "$version" | cut -d. -f1)
+minor=$(echo "$version" | cut -d. -f2)
+if test "$major" -gt 2 -o \( $major -eq 2 -a $minor -ge 2 \); then
+  options="$options --align-reference=name"
+fi
+if test "$debug" = "yes"; then
+  echo >&2 "major -------> $major"
+  echo >&2 "minor -------> $minor"
+fi
+
+
+# This script can be as a filter (with no arguments) or not.
+if [ $# -gt 0 ]; then
+  $astyle $options "$@"
+  code=$?
+else
+  # For some reasons, AStyle cannot work as a filter with GIT.  So I first
+  # save the input in a temporary file and run AStyle on it to generate the
+  # output.
+  tmp=$(mktemp "/tmp/c_cleanup-XXXXXXXXXX")
+  cat >"$tmp"
+  $astyle $options <"$tmp"
+  code=$?
+  if test "$debug" = "yes"; then
+    echo >&2 "input -------> $tmp"
+    echo >&2 "status ------> $code"
+  else
+    rm -f "$tmp"
+  fi
+fi
+return $code
+
+## No needs to remove spaces, astyle takes care of that; otherwise add:
+## | sed -e 's/[ 	][ 	]*$//'
+
+# Local Variables:
+# mode: sh
+# tab-width: 8
+# indent-tabs-mode: nil
+# fill-column: 78
+# coding: utf-8
+# End:
