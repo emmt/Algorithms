@@ -25,7 +25,7 @@ PKG_EXENAME=yorick
 # PKG_DEPLIBS=-Lsomedir -lsomelib   for dependencies of this package
 PKG_DEPLIBS=
 # set compiler (or rarely loader) flags specific to this package
-PKG_CFLAGS= -I..
+PKG_CFLAGS= -I.. -DINTEGER=long -USINGLE_PRECISION
 PKG_LDFLAGS=
 
 # list of additional package names you want in PKG_EXENAME
@@ -76,9 +76,6 @@ MAKE_TEMPLATE = protect-against-1.5
 #	$(CC) $(CPPFLAGS) $(CFLAGS) -DMY_SWITCH -o $@ -c myfunc.c
 
 ycobyla.o: ycobyla.c ../cobyla.h
-
 cobyla.o: ../cobyla.c ../cobyla.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) -DINTEGER=long -USINGLE_PRECISION \
-	  -o $@ -c $<
 
 # -------------------------------------------------------- end of Makefile
