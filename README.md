@@ -46,7 +46,7 @@ directory [`newuoa/yorick`](./newuoa/yorick).
 
 ## BOBYQA
 
-Directory [bobyqa](bobyqa) provides a C implementation of Mike Powell's
+Directory [`bobyqa`](bobyqa) provides a C implementation of Mike Powell's
 BOBYQA (for **B**ound constrained **O**ptimization **BY** **Q**uadratic
 **A**pproximations) algorithm for minimizing a function of many variables.
 The method is *derivatives free* (only the function values are needed) and
