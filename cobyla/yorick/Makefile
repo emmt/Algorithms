@@ -1,9 +1,9 @@
-# these values filled in by    yorick -batch make.i
-Y_MAKEDIR=/home/eric/work/code/easy-yorick/current/arch/linux-x86_64/yorick
-Y_EXE=/home/eric/work/code/easy-yorick/current/arch/linux-x86_64/yorick/bin/yorick
+# these values filled in by yorick -batch make.i
+Y_MAKEDIR=
+Y_EXE=
 Y_EXE_PKGS=
-Y_EXE_HOME=/home/eric/work/code/easy-yorick/current/arch/linux-x86_64/yorick
-Y_EXE_SITE=/home/eric/work/code/easy-yorick/current/arch/linux-x86_64/yorick
+Y_EXE_HOME=
+Y_EXE_SITE=
 Y_HOME_PKG=
 
 # ----------------------------------------------------- optimization flags
