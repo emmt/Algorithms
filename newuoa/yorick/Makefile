@@ -88,7 +88,7 @@ newuoa-yor.out: newuoa.i newuoa-test.i $(PKG_DLL)
 	$(Y_EXE) -batch newuoa-test.i >$@
 
 test: newuoa-yor.out ../newuoa-orig.out
-	@if diff $^ >${NAME}-yor.diff; then \
+	@if diff $^ >newuoa-yor.diff; then \
 	    msg="test of Yorick plugin successful"; \
 	    if ${COLOR}; then \
 	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
@@ -96,7 +96,7 @@ test: newuoa-yor.out ../newuoa-orig.out
 	        echo "$${msg}"; \
 	    fi; \
 	else \
-	    msg="test of Yorick plugin failed (see file ${NAME}-yor.diff)"; \
+	    msg="test of Yorick plugin failed (see file newuoa-yor.diff)"; \
 	    if ${COLOR}; then \
 	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
 	    else \
