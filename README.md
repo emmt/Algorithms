@@ -6,7 +6,7 @@ used almost standalone.
 
 ## COBYLA
 
-Directory [cobyla](cobyla) contains a C version of Mike Powell's COBYLA
+Directory [`cobyla`](cobyla) contains a C version of Mike Powell's COBYLA
 (for **C**onstrained **O**ptimization **BY** **L**inear **A**pproximations)
 algorithm for minimizing a function of many variables.  The method is
 *derivatives free* (only the function values are needed) and accounts for
@@ -18,10 +18,13 @@ constraints on the variables.  The algorithm is described in:
 > vol. 275 (eds. Susana Gomez and Jean-Pierre Hennart), Kluwer Academic
 > Publishers, pp. 51-67 (1994).
 
+A [Yorick](http://yorick.github.com/) interface is also provided in
+directory [`cobyla/yorick`](./cobyla/yorick).
+
 
 ## NEWUOA
 
-Directory [newuoa](newuoa) provides a C implementation of Mike Powell's
+Directory [`newuoa`](newuoa) provides a C implementation of Mike Powell's
 NEWUOA algorithm for minimizing a function of many variables.  The method
 is *derivatives free* (only the function values are needed) and accounts
 for bound constraints on the variables.  The algorithm is described in:
@@ -38,6 +41,8 @@ more efficient than COBYLA (which exploits a more simple linear model but
 implements arbitrary inequality constraints while NEWUOA is unconstrained).
 If you have bound constraints, you may consider using BOBYQA instead.
 
+A [Yorick](http://yorick.github.com/) interface is also provided in
+directory [`newuoa/yorick`](./newuoa/yorick).
 
 ## BOBYQA
 
