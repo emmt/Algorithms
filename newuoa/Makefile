@@ -103,7 +103,7 @@ ${NAME}-test: ${NAME}-test.o
 	${CC} ${LDFLAGS} $< -o $@ -lm
 
 test-code: ${NAME}-test.out ${NAME}-orig.out
-	@if diff $^ >${NAME}-f2c.diff; then \
+	@if diff $^ >${NAME}-test.diff; then \
 	    msg="test of C version successful"; \
 	    if ${COLOR}; then \
 	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
@@ -111,7 +111,7 @@ test-code: ${NAME}-test.out ${NAME}-orig.out
 	        echo "$${msg}"; \
 	    fi; \
 	else \
-	    msg="test of C version failed (see file ${NAME}-f2c.diff)"; \
+	    msg="test of C version failed (see file ${NAME}-test.diff)"; \
 	    if ${COLOR}; then \
 	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
 	    else \
