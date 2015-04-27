@@ -62,22 +62,24 @@ typedef REAL newuoa_objfun(const INTEGER n, const REAL *x, void* data);
    of the objective function for the variables X(1),X(2),...,X(N).  DATA is
    anything else needed by the objective function.
 
-   Initial values of the variables must be set in X(1),X(2),...,X(N). They
-   will be changed to the values that give the least calculated F.  RHOBEG
-   and RHOEND must be set to the initial and final values of a trust region
-   radius, so both must be positive with RHOEND<=RHOBEG. Typically RHOBEG
-   should be about one tenth of the greatest expected change to a variable,
-   and RHOEND should indicate the accuracy that is required in the final
-   values of the variables.
+   Initial values of the variables must be set in X(1),X(2),...,X(N).  They
+   will be changed to the values that give the least calculated F.
 
-   The value of IPRINT should be set to 0, 1, 2 or 3, which controls the
-   amount of printing. Specifically, there is no output if IPRINT=0 and there
-   is output only at the return if IPRINT=1. Otherwise, each new value of RHO
-   is printed, with the best vector of variables so far and the corresponding
+   RHOBEG and RHOEND must be set to the initial and final values of a trust
+   region radius, so both must be positive with RHOEND<=RHOBEG.  Typically
+   RHOBEG should be about one tenth of the greatest expected change to a
+   variable, and RHOEND should indicate the accuracy that is required in the
+   final values of the variables.
+
+   The value of IPRINT should be set to 0, 1, 2 or 3, which controls the amount
+   of printing. Specifically, there is no output if IPRINT=0 and there is
+   output only at the return if IPRINT=1. Otherwise, each new value of RHO is
+   printed, with the best vector of variables so far and the corresponding
    value of the objective function. Further, each new value of F with its
    variables are output if IPRINT=3.
 
-   MAXFUN must be set to an upper bound on the number of calls of CALFUN.
+   MAXFUN must be set to an upper bound on the number of calls of OBJFUN.
+
    The array W will be used for working space. Its length must be at least
    (NPT+13)*(NPT+N)+3*N*(N+3)/2.
 
@@ -118,8 +120,12 @@ typedef struct _newuoa_context newuoa_context_t;
 /* Allocate a new reverse communication workspace for NEWUOA algorithm.  The
    returned address is `NULL` to indicate an error: either invalid parameters
    (external variable `errno` set to `EINVAL`), or insufficient memory
-   (external variable `errno` set to `ENOMEM`).  When no longer needed, the
-   workspace must be deleted with `newuoa_delete`.
+   (external variable `errno` set to `ENOMEM`).  The arguments correspond to
+   those of `newuoa` (except that the variables X are omiited because they need
+   not be specified until the first iteration with `newuoa_iterate` and that
+   the workspace W is automatically allocated).
+
+   When no longer needed, the workspace must be deleted with `newuoa_delete`.
 
    A typical usage is:
    ```
