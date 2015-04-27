@@ -389,11 +389,11 @@ func cobyla_test(prob)
     /* Problem number and driver. */
     p = prob(i);
     fn = symbol_def(swrite(format="cobyla_test%d", p));
-    write, format = "\n       Output from test problem %d (%s)\n", p, name;
 
     /* Query problem size, initial and true solution. */
     local n, m, xinit, xopt, name;
     fn;
+    write, format = "\n       Output from test problem %d (%s)\n", p, name;
 
     for (icase = 1; icase <= 2; ++icase) {
       rhobeg = 0.5;
