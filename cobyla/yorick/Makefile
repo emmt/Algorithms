@@ -12,6 +12,10 @@ Y_HOME_PKG=
 COPT=$(COPT_DEFAULT)
 TGT=$(DEFAULT_TGT)
 
+# Set the following to true/false depending whetehr your terminal
+# does support ANSI colors.
+COLOR = true
+
 # ------------------------------------------------ macros for this package
 
 PKG_NAME=ycobyla
@@ -79,5 +83,22 @@ cobyla.o: ../cobyla.c ../cobyla.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
 
 ycobyla.o: ycobyla.c ../cobyla.h
+
+test: cobyla-yor.out ../cobyla-orig.out
+	@if diff $^ >cobyla-yor.diff; then \
+	    msg="test of Yorick plugin successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
+	else \
+	    msg="test of Yorick plugin failed (see file cobyla-yor.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
+	fi
 
 # -------------------------------------------------------- end of Makefile
