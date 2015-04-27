@@ -1,14 +1,30 @@
 .PHONY: clean test-orig test-f2c
 
-srcdir=.
-TMPDIR = /tmp
-NAME = cobyla
+#---- Customizations begin here -----------------------------------------------
 
+# Compilers (only the C compiler is needed to build the library):
 CC = gcc
 FC = gfortran
 
-CFLAGS = -Wall -O2 -I. -DNDEBUG
+# Compiler and linker flags:
+#STRICT = -ansi -Wpedantic
+CFLAGS = ${STRICT} -Wall -O2 -I. -DNDEBUG
 FFLAGS = ${CFLAGS}
+LDFLAGS =
+
+# Command and flags to build a static libarry:
+AR = ar
+ARFLAGS = rv
+
+# Set the following to true/false depending whetehr your terminal does support
+# ANSI colors.
+COLOR = true
+
+#---- Customization end here --------------------------------------------------
+
+srcdir=.
+TMPDIR = /tmp
+NAME = cobyla
 
 SINGLE = -DSINGLE_PRECISION
 DOUBLE = -USINGLE_PRECISION
@@ -74,19 +90,37 @@ ${NAME}-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
 test: test-double test-single
 
 test-double: ${NAME}-double.out ${NAME}-orig-double.out
-	@if diff ${NAME}-orig-double.out ${NAME}-double.out \
-	    >${NAME}-double.diff; then \
-	    echo "test-double successful"; \
+	@if diff $^ >${NAME}-double.diff; then \
+	    msg="test C/double successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test-double failed (see file ${NAME}-double.diff)"; \
+	    msg="test C/double failed (see file ${NAME}-double.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
 
 test-single: ${NAME}-single.out ${NAME}-orig-single.out
-	@if diff ${NAME}-orig-single.out ${NAME}-single.out \
-	    >${NAME}-single.diff; then \
-	    echo "test-single successful"; \
+	@if diff $^ >${NAME}-single.diff; then \
+	    msg="test C/single successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test-single failed (see file ${NAME}-single.diff)"; \
+	    msg="test C/single failed (see file ${NAME}-single.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
 
 cobyla.o: ${srcdir}/cobyla.c ${srcdir}/cobyla.h
@@ -103,19 +137,37 @@ ${NAME}-revcom-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
 test-revcom: test-revcom-double test-revcom-single
 
 test-revcom-double: ${NAME}-revcom-double.out ${NAME}-orig-double.out
-	@if diff ${NAME}-orig-double.out ${NAME}-revcom-double.out \
-	    >${NAME}-revcom-double.diff; then \
-	    echo "test-double successful"; \
+	@if diff $^ >${NAME}-revcom-double.diff; then \
+	    msg="test revcom/double successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test-double failed (see file ${NAME}-revcom-double.diff)"; \
+	    msg="test revcom/double failed (see file ${NAME}-revcom-double.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
 
 test-revcom-single: ${NAME}-revcom-single.out ${NAME}-orig-single.out
-	@if diff ${NAME}-orig-single.out ${NAME}-revcom-single.out \
-	    >${NAME}-revcom-single.diff; then \
-	    echo "test-single successful"; \
+	@if diff $^ >${NAME}-revcom-single.diff; then \
+	    msg="test revcom/single successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test-single failed (see file ${NAME}-revcom-single.diff)"; \
+	    msg="test revcom/single failed (see file ${NAME}-revcom-single.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
 
 ### FORTRAN wrapper.
@@ -129,17 +181,35 @@ ${NAME}-fwrap-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
 test-fwrap: test-fwrap-double test-fwrap-single
 
 test-fwrap-double: ${NAME}-fwrap-double.out ${NAME}-orig-double.out
-	@if diff ${NAME}-orig-double.out ${NAME}-fwrap-double.out \
-	    >${NAME}-fwrap-double.diff; then \
-	    echo "test-double successful"; \
+	@if diff $^ >${NAME}-fwrap-double.diff; then \
+	    msg="test fwrap/double successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test-double failed (see file ${NAME}-fwrap-double.diff)"; \
+	    msg="test fwrap/double failed (see file ${NAME}-fwrap-double.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
 
 test-fwrap-single: ${NAME}-fwrap-single.out ${NAME}-orig-single.out
-	@if diff ${NAME}-orig-single.out ${NAME}-fwrap-single.out \
-	    >${NAME}-fwrap-single.diff; then \
-	    echo "test-single successful"; \
+	@if diff $^ >${NAME}-fwrap-single.diff; then \
+	    msg="test fwrap/single successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	else \
-	    echo "test-single failed (see file ${NAME}-fwrap-single.diff)"; \
+	    msg="test fwrap/single failed (see file ${NAME}-fwrap-single.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
 	fi
