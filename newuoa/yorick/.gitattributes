@@ -1,0 +1,9 @@
+*.[hc]     filter=cleanup-code
+*.i        filter=cleanup-code
+*.md       filter=cleanup-text
+README     filter=cleanup-text
+TODO       filter=cleanup-text
+AUTHORS    filter=cleanup-text
+NEWS       filter=cleanup-text
+configure  filter=cleanup-text
+Makefile   filter=cleanup-yorick-makefile
