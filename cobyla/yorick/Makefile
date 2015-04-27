@@ -75,7 +75,9 @@ MAKE_TEMPLATE = protect-against-1.5
 #myfunc.o: myapi.h myfunc.c
 #	$(CC) $(CPPFLAGS) $(CFLAGS) -DMY_SWITCH -o $@ -c myfunc.c
 
-ycobyla.o: ycobyla.c ../cobyla.h
 cobyla.o: ../cobyla.c ../cobyla.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+
+ycobyla.o: ycobyla.c ../cobyla.h
 
 # -------------------------------------------------------- end of Makefile
