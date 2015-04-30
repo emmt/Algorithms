@@ -201,7 +201,7 @@ cobyla_get_status(const cobyla_context_t* ws);
 /* Get the current number of function evaluations.  Result is -1 if something
    is wrong (e.g. WS is NULL), nonnegative otherwise. */
 extern INTEGER
-cobyla_get_nfvals(const cobyla_context_t* ws);
+cobyla_get_nevals(const cobyla_context_t* ws);
 
 /* Get the current size of the trust region.  Result is 0 if algorithm not yet
    started (before first iteration), -1 if something is wrong (e.g. WS is

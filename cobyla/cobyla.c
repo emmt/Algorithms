@@ -793,7 +793,7 @@ cobyla_get_status(const cobyla_context_t* ws)
 }
 
 INTEGER
-cobyla_get_nfvals(const cobyla_context_t* ws)
+cobyla_get_nevals(const cobyla_context_t* ws)
 {
   if (ws == NULL) {
     errno = EFAULT;

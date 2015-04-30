@@ -65,7 +65,7 @@ static void ycobyla_extract(void* addr, char* attr)
         return;
       }
       if (strcmp(attr, "nevals") == 0) {
-        ypush_long(cobyla_get_nfvals(obj->ctx));
+        ypush_long(cobyla_get_nevals(obj->ctx));
         return;
       }
     } else if (c == 'm') {
