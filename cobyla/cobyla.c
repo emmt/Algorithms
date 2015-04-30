@@ -708,7 +708,7 @@ cobyla_context_t*
 cobyla_create(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
               INTEGER iprint, INTEGER maxfun)
 {
-  cobyla_context_t* ws;
+  cobyla_context_t* ctx;
   long size, w_offset, iact_offset;
   INTEGER mp, mpp;
 
@@ -724,92 +724,92 @@ cobyla_create(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
   size = iact_offset + (m + 1)*sizeof(INTEGER);
   w_offset = ROUND_UP(size, sizeof(REAL));
   size = w_offset + (n*(3*n + 2*m + 11) + 4*m + 6)*sizeof(REAL);
-  ws = (cobyla_context_t*)malloc(size);
-  if (ws == NULL) {
+  ctx = (cobyla_context_t*)malloc(size);
+  if (ctx == NULL) {
     return NULL;
   }
-  memset(ws, 0, size);
-  ws->n = n;
-  ws->m = m;
-  ws->nfvals = 0; /* indicate a fresh start */
-  ws->status = COBYLA_CALC_FC;
-  ws->iprint = iprint;
-  ws->maxfun = maxfun;
-  ws->rhobeg = rhobeg;
-  ws->rhoend = rhoend;
+  memset(ctx, 0, size);
+  ctx->n = n;
+  ctx->m = m;
+  ctx->nfvals = 0; /* indicate a fresh start */
+  ctx->status = COBYLA_CALC_FC;
+  ctx->iprint = iprint;
+  ctx->maxfun = maxfun;
+  ctx->rhobeg = rhobeg;
+  ctx->rhoend = rhoend;
 
   /* Partition the working space array W to provide the storage that is needed
     for the main calculation. */
   mp = m + 1;
   mpp = m + 2;
-  ws->iact  = ADDRESS(INTEGER, ws, iact_offset);
-  ws->con   = ADDRESS(REAL, ws, w_offset);
-  ws->sim   = ws->con + mpp;
-  ws->simi  = ws->sim + n*n + n;
-  ws->datm  = ws->simi + n*n;
-  ws->a     = ws->datm + n*mpp + mpp;
-  ws->vsig  = ws->a + m*n + n;
-  ws->veta  = ws->vsig + n;
-  ws->sigb  = ws->veta + n;
-  ws->dx    = ws->sigb + n;
-  ws->z     = ws->dx + n;
-  ws->zdota = ws->z + n*n;
-  ws->vmc   = ws->zdota + n;
-  ws->sdirn = ws->vmc + mp;
-  ws->dxnew = ws->sdirn + n;
-  ws->vmd   = ws->dxnew + n;
+  ctx->iact  = ADDRESS(INTEGER, ctx, iact_offset);
+  ctx->con   = ADDRESS(REAL, ctx, w_offset);
+  ctx->sim   = ctx->con + mpp;
+  ctx->simi  = ctx->sim + n*n + n;
+  ctx->datm  = ctx->simi + n*n;
+  ctx->a     = ctx->datm + n*mpp + mpp;
+  ctx->vsig  = ctx->a + m*n + n;
+  ctx->veta  = ctx->vsig + n;
+  ctx->sigb  = ctx->veta + n;
+  ctx->dx    = ctx->sigb + n;
+  ctx->z     = ctx->dx + n;
+  ctx->zdota = ctx->z + n*n;
+  ctx->vmc   = ctx->zdota + n;
+  ctx->sdirn = ctx->vmc + mp;
+  ctx->dxnew = ctx->sdirn + n;
+  ctx->vmd   = ctx->dxnew + n;
 
-  return ws;
+  return ctx;
 }
 
 void
-cobyla_delete(cobyla_context_t* ws)
+cobyla_delete(cobyla_context_t* ctx)
 {
-  if (ws != NULL) {
-    free((void*)ws);
+  if (ctx != NULL) {
+    free((void*)ctx);
   }
 }
 
 int
-cobyla_restart(cobyla_context_t* ws)
+cobyla_restart(cobyla_context_t* ctx)
 {
-  if (ws == NULL) {
+  if (ctx == NULL) {
     errno = EFAULT;
     return COBYLA_BAD_ADDRESS;
   }
-  ws->nfvals = 0;
-  ws->status = COBYLA_CALC_FC;
-  return ws->status;
+  ctx->nfvals = 0;
+  ctx->status = COBYLA_CALC_FC;
+  return ctx->status;
 }
 
 int
-cobyla_get_status(const cobyla_context_t* ws)
+cobyla_get_status(const cobyla_context_t* ctx)
 {
-  if (ws == NULL) {
+  if (ctx == NULL) {
     errno = EFAULT;
     return COBYLA_BAD_ADDRESS;
   }
-  return ws->status;
+  return ctx->status;
 }
 
 INTEGER
-cobyla_get_nevals(const cobyla_context_t* ws)
+cobyla_get_nevals(const cobyla_context_t* ctx)
 {
-  if (ws == NULL) {
+  if (ctx == NULL) {
     errno = EFAULT;
     return -1;
   }
-  return ws->nfvals;
+  return ctx->nfvals;
 }
 
 REAL
-cobyla_get_rho(const cobyla_context_t* ws)
+cobyla_get_rho(const cobyla_context_t* ctx)
 {
-  if (ws == NULL) {
+  if (ctx == NULL) {
     errno = EFAULT;
     return -1;
   }
-  return ws->rho;
+  return ctx->rho;
 }
 
 /* Define macros mimicking FORTRAN indexing. */
@@ -827,7 +827,7 @@ cobyla_get_rho(const cobyla_context_t* ws)
 #define      X(a1)         x[a1 - 1]
 
 int
-cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
+cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[])
 {
   /* Constants. */
   const REAL zero  = FLT(0.0);
@@ -848,41 +848,41 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   int status = COBYLA_SUCCESS;
 
   /* Minimal checking. */
-  if (ws == NULL || x == NULL || (c == NULL && ws->m > 0)) {
+  if (ctx == NULL || x == NULL || (c == NULL && ctx->m > 0)) {
     errno = EFAULT;
-    if (ws != NULL) ws->status = COBYLA_BAD_ADDRESS;
+    if (ctx != NULL) ctx->status = COBYLA_BAD_ADDRESS;
     return COBYLA_BAD_ADDRESS;
   }
-  if (ws->status != COBYLA_CALC_FC || ws->nfvals < 0) {
+  if (ctx->status != COBYLA_CALC_FC || ctx->nfvals < 0) {
     errno = EINVAL;
-    ws->status = COBYLA_CORRUPTED;
-    return ws->status;
+    ctx->status = COBYLA_CORRUPTED;
+    return ctx->status;
   }
 
   /* Initialize local variables. */
-  n = ws->n;
-  m = ws->m;
+  n = ctx->n;
+  m = ctx->m;
   np = n + 1;
   mp = m + 1;
   mpp = m + 2;
-  iact   = ws->iact;
-  con    = ws->con;
-  sim    = ws->sim;
-  simi   = ws->simi;
-  datmat = ws->datm;
-  a      = ws->a;
-  vsig   = ws->vsig;
-  veta   = ws->veta;
-  sigbar = ws->sigb;
-  dx     = ws->dx;
-  w      = ws->z; /* used as a working vector */
-  if (ws->nfvals <= 0) {
+  iact   = ctx->iact;
+  con    = ctx->con;
+  sim    = ctx->sim;
+  simi   = ctx->simi;
+  datmat = ctx->datm;
+  a      = ctx->a;
+  vsig   = ctx->vsig;
+  veta   = ctx->veta;
+  sigbar = ctx->sigb;
+  dx     = ctx->dx;
+  w      = ctx->z; /* used as a working vector */
+  if (ctx->nfvals <= 0) {
     /* Set the initial values of some parameters.  The last column of SIM holds
        the optimal vertex of the current simplex, and the preceding N columns
        hold the displacements from the optimal vertex to the other vertices.
        Further, SIMI holds the inverse of the matrix that is contained in the
        first N columns of SIM. */
-    rho =  ws->rhobeg;
+    rho =  ctx->rhobeg;
     parmu = zero;
     parsig = zero; /* set to avoid warnings */
     prerem = zero; /* set to avoid warnings */
@@ -890,7 +890,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     iflag = 0;     /* set to avoid warnings */
     jdrop = np;
     ibrnch = 0;
-    ws->nfvals = 0;
+    ctx->nfvals = 0;
     temp = one/rho;
     LOOP(i,n) {
       SIM(i,np) = X(i);
@@ -901,22 +901,22 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
       SIM(i,i) = rho;
       SIMI(i,i) = temp;
     }
-    if (ws->iprint >= 2) {
+    if (ctx->iprint >= 2) {
       fprintf(stdout, "\n   The initial value of RHO is%13.6E"
               "  and PARMU is set to zero.\n", (double)rho);
     }
   } else {
     /* Restore variables. */
-    ibrnch = ws->ibrnch;
-    iflag  = ws->iflag;
-    ifull  = ws->ifull;
-    jdrop  = ws->jdrop;
-    parmu  = ws->parmu;
-    parsig = ws->parsig;
-    prerec = ws->prerec;
-    prerem = ws->prerem;
-    resmax = ws->resmax;
-    rho    = ws->rho;
+    ibrnch = ctx->ibrnch;
+    iflag  = ctx->iflag;
+    ifull  = ctx->ifull;
+    jdrop  = ctx->jdrop;
+    parmu  = ctx->parmu;
+    parsig = ctx->parsig;
+    prerec = ctx->prerec;
+    prerem = ctx->prerem;
+    resmax = ctx->resmax;
+    rho    = ctx->rho;
   }
 
   /* Set the values in CON: copy the M constraints, plus the function value F
@@ -927,9 +927,9 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     con[k] = temp;
     if (resmax < -temp) resmax = -temp;
   }
-  ++ws->nfvals;
-  if (ws->nfvals == ws->iprint - 1 || ws->iprint == 3) {
-    print_calcfc(stdout, n, ws->nfvals, f, resmax, x);
+  ++ctx->nfvals;
+  if (ctx->nfvals == ctx->iprint - 1 || ctx->iprint == 3) {
+    print_calcfc(stdout, n, ctx->nfvals, f, resmax, x);
   }
   CON(mp) = f;
   CON(mpp) = resmax;
@@ -943,7 +943,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   LOOP(k,mpp) {
     DATMAT(k,jdrop) = CON(k);
   }
-  if (ws->nfvals > np) goto L_130;
+  if (ctx->nfvals > np) goto L_130;
 
   /* Exchange the new vertex of the initial simplex with the optimal vertex if
      necessary.  Then, if the initial simplex is not complete, pick its next
@@ -967,8 +967,8 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
       }
     }
   }
-  if (ws->nfvals <= n) {
-    jdrop = ws->nfvals;
+  if (ctx->nfvals <= n) {
+    jdrop = ctx->nfvals;
     X(jdrop) += rho;
     goto call_calcfc;
   }
@@ -1024,10 +1024,10 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
     }
   }
   if (error > FLT(0.1)) {
-    ws->status = COBYLA_ROUNDING_ERRORS;
-    if (ws->iprint >= 1) {
+    ctx->status = COBYLA_ROUNDING_ERRORS;
+    if (ctx->iprint >= 1) {
       fprintf(stderr, "Return from subroutine COBYLA because %s.\n",
-              cobyla_reason(ws->status));
+              cobyla_reason(ctx->status));
     }
     goto L_600;
   }
@@ -1139,8 +1139,8 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   /* Calculate DX = X(*) - X(0).  Branch if the length of DX is less than
      0.5*RHO. */
  L_370:
-   trstlp(n, m, a, con, rho, dx, &ifull, iact, ws->z, ws->zdota,
-          ws->vmc, ws->sdirn, ws->dxnew, ws->vmd);
+   trstlp(n, m, a, con, rho, dx, &ifull, iact, ctx->z, ctx->zdota,
+          ctx->vmc, ctx->sdirn, ctx->dxnew, ctx->vmd);
   if (ifull == 0) {
     temp = zero;
     LOOP(i,n) {
@@ -1173,7 +1173,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   barmu = (prerec > zero ? sum/prerec : zero);
   if (parmu < FLT(1.5)*barmu) {
     parmu = FLT(2.0)*barmu;
-    if (ws->iprint >= 2) {
+    if (ctx->iprint >= 2) {
       fprintf(stdout, "\n   Increase in PARMU to%13.6E\n", (double)parmu);
     }
     phi = DATMAT(mp,np) + parmu*DATMAT(mpp,np);
@@ -1278,9 +1278,9 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   }
 
   /* Otherwise reduce RHO if it is not at its least value and reset PARMU. */
-  if (rho > ws->rhoend) {
+  if (rho > ctx->rhoend) {
     rho = FLT(0.5)*rho;
-    if (rho <= FLT(1.5)*ws->rhoend) rho = ws->rhoend;
+    if (rho <= FLT(1.5)*ctx->rhoend) rho = ctx->rhoend;
     if (parmu > zero) {
       REAL cmin, cmax, denom;
       denom = zero;
@@ -1306,11 +1306,11 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
         parmu = (cmax - cmin)/denom;
       }
     }
-    if (ws->iprint >= 2) {
+    if (ctx->iprint >= 2) {
       fprintf(stdout, "\n   Reduction in RHO to%13.6E  and PARMU =%13.6E\n",
               (double)rho, (double)parmu);
-      if (ws->iprint == 2) {
-        print_calcfc(stdout, n, ws->nfvals, DATMAT(mp,np), DATMAT(mpp,np),
+      if (ctx->iprint == 2) {
+        print_calcfc(stdout, n, ctx->nfvals, DATMAT(mp,np), DATMAT(mpp,np),
                      &SIM(1,np));
       }
     }
@@ -1318,7 +1318,7 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   }
 
   /* Return the best calculated values of the variables. */
-  if (ws->iprint >= 1) {
+  if (ctx->iprint >= 1) {
     fprintf(stdout, "\n   Normal return from subroutine COBYLA\n");
   }
   if (ifull == 1) goto L_620;
@@ -1329,33 +1329,33 @@ cobyla_iterate(cobyla_context_t* ws, REAL f, REAL x[], REAL c[])
   f = DATMAT(mp,np);
   resmax = DATMAT(mpp,np);
  L_620:
-  if (ws->iprint >= 1) {
-    print_calcfc(stdout, n, ws->nfvals, f, resmax, &X(1));
+  if (ctx->iprint >= 1) {
+    print_calcfc(stdout, n, ctx->nfvals, f, resmax, &X(1));
   }
 
   /* Restore local variables and return status. */
  done:
-  ws->ibrnch = ibrnch;
-  ws->iflag  = iflag;
-  ws->ifull  = ifull;
-  ws->jdrop  = jdrop;
-  ws->parmu  = parmu;
-  ws->parsig = parsig;
-  ws->prerec = prerec;
-  ws->prerem = prerem;
-  ws->resmax = resmax;
-  ws->rho    = rho;
-  ws->status = status;
+  ctx->ibrnch = ibrnch;
+  ctx->iflag  = iflag;
+  ctx->ifull  = ifull;
+  ctx->jdrop  = jdrop;
+  ctx->parmu  = parmu;
+  ctx->parsig = parsig;
+  ctx->prerec = prerec;
+  ctx->prerem = prerem;
+  ctx->resmax = resmax;
+  ctx->rho    = rho;
+  ctx->status = status;
   return status;
 
   /* Make the next call of the user-supplied subroutine CALCFC.  These
      instructions are also used for calling CALCFC during the iterations
      of the algorithm. */
  call_calcfc:
-  if (ws->nfvals >= ws->maxfun) {
+  if (ctx->nfvals >= ctx->maxfun) {
     status = COBYLA_TOO_MANY_EVALUATIONS;
     fprintf(stderr, "Return from subroutine COBYLA because %s.\n",
-            cobyla_reason(ws->status));
+            cobyla_reason(ctx->status));
     goto L_600;
   } else {
     status = COBYLA_CALC_FC;
@@ -2302,7 +2302,7 @@ testing_revcom(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
 {
   REAL f;
   REAL* c;
-  cobyla_context_t* ws;
+  cobyla_context_t* ctx;
   int status;
   const char* reason;
 
@@ -2314,20 +2314,20 @@ testing_revcom(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
   } else {
     c = NULL;
   }
-  ws = cobyla_create(n, m, rhobeg, rhoend, iprint, maxfun);
-  if (ws == NULL) {
+  ctx = cobyla_create(n, m, rhobeg, rhoend, iprint, maxfun);
+  if (ctx == NULL) {
     if (errno == ENOMEM) {
       goto enomem;
     } else {
       goto einval;
     }
   }
-  status = cobyla_get_status(ws);
+  status = cobyla_get_status(ctx);
   while (status == COBYLA_CALC_FC) {
     f = calcfc(n, m, x, c, NULL);
-    status = cobyla_iterate(ws, f, x, c);
+    status = cobyla_iterate(ctx, f, x, c);
   }
-  cobyla_delete(ws);
+  cobyla_delete(ctx);
 #if 0
   if (status == COBYLA_SUCCESS) {
     return;
