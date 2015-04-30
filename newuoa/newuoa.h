@@ -93,6 +93,7 @@ extern int newuoa(const INTEGER n, const INTEGER npt,
 
 
 /* Possible values returned by NEWUOA. */
+#define NEWUOA_INITIAL_ITERATE       (2) /* only used internaly */
 #define NEWUOA_ITERATE               (1) /* caller is requested to evaluate
                                             the objective function and call
                                             newuoa_iterate */

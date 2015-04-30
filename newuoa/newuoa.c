@@ -761,6 +761,7 @@ static int newuob(const INTEGER n, const INTEGER npt,
     ctx->status = NEWUOA_CORRUPTED;
     return ctx->status;
   }
+  status = NEWUOA_INITIAL_ITERATE;
 #endif
 
   /* Set the initial elements of XPT, BMAT, HQ, PQ and ZMAT to zero. */
@@ -1098,11 +1099,15 @@ static int newuob(const INTEGER n, const INTEGER npt,
   }
 
 #ifdef _NEWUOA_REVCOM
-  /* Request a new function evaluation from the caller and branch to save
-     local variables in the context structure. */
-  status = NEWUOA_ITERATE;
-  goto save;
-
+  if (status == NEWUOA_INITIAL_ITERATE) {
+    /* We already know the functiuon value. */
+    status = NEWUOA_ITERATE;
+  } else {
+    /* Request a new function evaluation from the caller and branch to save
+       local variables in the context structure. */
+    status = NEWUOA_ITERATE;
+    goto save;
+  }
   /* We arrive here when caller has computed a new function value. */
  new_eval:
 #else
