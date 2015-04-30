@@ -20,7 +20,7 @@ ARFLAGS = rv
 # ANSI colors.
 COLOR = true
 
-#---- Customization end here.
+#---- Customization end here --------------------------------------------------
 
 srcdir=.
 TMPDIR = /tmp
