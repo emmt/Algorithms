@@ -319,11 +319,14 @@ func cobyla_test(prob)
       /* Solve problem. */
       c = (m ? array(double, m) : []);
       x = xinit;
+      nevals = 0;
       ctx = cobyla_create(n, m, rhobeg, rhoend, iprint, maxfun);
       while (ctx.status == COBYLA_CALC_FC) {
         f = fn(x, c);
         cobyla_iterate, ctx, f, x, c;
+        ++nevals;
       }
+      //write, format="nevals: %d (%d)\n", nevals, ctx.nevals;
       if (ctx.status != COBYLA_SUCCESS) {
         error, swrite(format="Something wrong occured in COBYLA: %s",
                       ctx.reason);

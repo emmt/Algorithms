@@ -24,11 +24,14 @@ func newuoa_test(nil)
     rhobeg = x(1)*0.2;
     write, format="\n\n    Results with N =%2d and NPT =%3d\n", n, npt;
 
+    nevals = 0;
     ctx = newuoa_create(n, npt, rhobeg, rhoend, iprint, maxfun);
     while (ctx.status == NEWUOA_ITERATE) {
       f = newuoa_test_objfun(x);
       newuoa_iterate, ctx, f, x;
+      ++nevals;
     }
+    //write, format="nevals: %d (%d)\n", nevals, ctx.nevals;
   }
 }
 
