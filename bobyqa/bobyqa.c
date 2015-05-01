@@ -403,11 +403,11 @@ bobyqb(const INTEGER n, const INTEGER npt,
 
      SL and SU hold the differences XL-XBASE and XU-XBASE, respectively.  All
      the components of every XOPT are going to satisfy the bounds SL(I)
-     .LEQ. XOPT(I) .LEQ. SU(I), with appropriate equalities when XOPT is on a
+     <= XOPT(I) <= SU(I), with appropriate equalities when XOPT is on a
      constraint boundary.
 
-     XNEW is chosen by SUBROUTINE TRSBOX or ALTMOV. Usually XBASE+XNEW is the
-     vector of variables for the next call of OBJFUN. XNEW also satisfies the
+     XNEW is chosen by SUBROUTINE TRSBOX or ALTMOV.  Usually XBASE+XNEW is the
+     vector of variables for the next call of OBJFUN.  XNEW also satisfies the
      SL and SU constraints in the way that has just been mentioned.
 
      XALT is an alternative to XNEW, chosen by ALTMOV, that may replace XNEW in
@@ -418,7 +418,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
      VLAG contains the values of the Lagrange functions at a new point X.  They
      are part of a product that requires VLAG to be of length NDIM.
 
-     W is a one-dimensional array that is used for working space. Its length
+     W is a one-dimensional array that is used for working space.  Its length
      must be at least 3*NDIM = 3*(NPT+N). */
 
   /* Constants. */
@@ -539,7 +539,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
   /* Generate the next point in the trust region that provides a small value
      of the quadratic model subject to the constraints on the variables.
      The integer NTRITS is set to the number "trust region" iterations that
-     have occurred since the last "alternative" iteration. If the length
+     have occurred since the last "alternative" iteration.  If the length
      of XNEW-XOPT is less than HALF*RHO, however, then there is a branch to
      label 650 or 680 with NTRITS=-1, instead of calculating F at XNEW. */
  L60:
@@ -557,7 +557,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
     }
 
     /* The following choice between labels 650 and 680 depends on whether or
-       not our work with the current RHO seems to be complete. Either RHO is
+       not our work with the current RHO seems to be complete.  Either RHO is
        decreased or termination occurs if the errors in the quadratic model at
        the last three interpolation points compare favourably with predictions
        of likely improvements to the model within distance HALF*RHO of XOPT. */
@@ -593,9 +593,9 @@ bobyqb(const INTEGER n, const INTEGER npt,
 
   /* Severe cancellation is likely to occur if XOPT is too far from XBASE.
      If the following test holds, then XBASE is shifted so that XOPT becomes
-     zero. The appropriate changes are made to BMAT and to the second
+     zero.  The appropriate changes are made to BMAT and to the second
      derivatives of the current model, beginning with the changes to BMAT
-     that do not depend on ZMAT. VLAG is used temporarily for working space. */
+     that do not depend on ZMAT.  VLAG is used temporarily for working space. */
  L90:
   if (dsq <= xoptsq*0.001) {
     fracsq = xoptsq*0.25;
@@ -646,8 +646,8 @@ bobyqb(const INTEGER n, const INTEGER npt,
       }
     }
 
-    /* The following instructions complete the shift, including the changes
-       to the second derivative parameters of the quadratic model. */
+    /* The following instructions complete the shift, including the changes to
+       the second derivative parameters of the quadratic model. */
     ih = 0;
     LOOP(j,n) {
       w[j] = -half*sumpq*xopt[j];
@@ -675,14 +675,14 @@ bobyqb(const INTEGER n, const INTEGER npt,
   }
   goto L230;
 
-  /* XBASE is also moved to XOPT by a call of RESCUE. This calculation is
-     more expensive than the previous shift, because new matrices BMAT and
-     ZMAT are generated from scratch, which may include the replacement of
-     interpolation points whose positions seem to be causing near linear
-     dependence in the interpolation conditions. Therefore RESCUE is called
-     only if rounding errors have reduced by at least a factor of two the
-     denominator of the formula for updating the H matrix. It provides a
-     useful safeguard, but is not invoked in most applications of BOBYQA. */
+  /* XBASE is also moved to XOPT by a call of RESCUE.  This calculation is more
+     expensive than the previous shift, because new matrices BMAT and ZMAT are
+     generated from scratch, which may include the replacement of interpolation
+     points whose positions seem to be causing near linear dependence in the
+     interpolation conditions.  Therefore RESCUE is called only if rounding
+     errors have reduced by at least a factor of two the denominator of the
+     formula for updating the H matrix.  It provides a useful safeguard, but is
+     not invoked in most applications of BOBYQA. */
  L190:
   nfsav = nf;
   kbase = kopt;
@@ -691,9 +691,9 @@ bobyqb(const INTEGER n, const INTEGER npt,
          &pq[1], &BMAT(1,1), &ZMAT(1,1), ndim, &sl[1], &su[1],
          &nf, delta, &kopt, &vlag[1], &w[1], &w[n + np], &w[ndim + np]);
 
-  /* XOPT is updated now in case the branch below to label 720 is taken.
-     Any updating of GOPT occurs after the branch below to label 20, which
-     leads to a trust region iteration as does the branch to label 60. */
+  /* XOPT is updated now in case the branch below to label 720 is taken.  Any
+     updating of GOPT occurs after the branch below to label 20, which leads to
+     a trust region iteration as does the branch to label 60. */
   xoptsq = zero;
   if (kopt != kbase) {
     LOOP(i,n) {
@@ -714,16 +714,16 @@ bobyqb(const INTEGER n, const INTEGER npt,
     goto L60;
   }
 
-  /* Pick two alternative vectors of variables, relative to XBASE, that
-     are suitable as new positions of the KNEW-th interpolation point.
-     Firstly, XNEW is set to the point on a line through XOPT and another
-     interpolation point that minimizes the predicted value of the next
-     denominator, subject to ||XNEW - XOPT|| .LEQ. ADELT and to the SL
-     and SU bounds. Secondly, XALT is set to the best feasible point on
-     a constrained version of the Cauchy step of the KNEW-th Lagrange
-     function, the corresponding value of the square of this function
-     being returned in CAUCHY. The choice between these alternatives is
-     going to be made when the denominator is calculated. */
+  /* Pick two alternative vectors of variables, relative to XBASE, that are
+     suitable as new positions of the KNEW-th interpolation point.  Firstly,
+     XNEW is set to the point on a line through XOPT and another interpolation
+     point that minimizes the predicted value of the next denominator, subject
+     to ||XNEW - XOPT|| <= ADELT and to the SL and SU bounds.  Secondly, XALT
+     is set to the best feasible point on a constrained version of the Cauchy
+     step of the KNEW-th Lagrange function, the corresponding value of the
+     square of this function being returned in CAUCHY.  The choice between
+     these alternatives is going to be made when the denominator is
+     calculated. */
  L210:
   altmov(n, npt, &XPT(1,1), &xopt[1], &BMAT(1,1), &ZMAT(1,1), ndim,
          &sl[1], &su[1], kopt, knew, adelt, &xnew[1], &xalt[1],
@@ -732,9 +732,9 @@ bobyqb(const INTEGER n, const INTEGER npt,
     d[i] = xnew[i] - xopt[i];
   }
 
-  /* Calculate VLAG and BETA for the current choice of D. The scalar
-     product of D with XPT(K,.) is going to be held in W(NPT+K) for
-     use when VQUAD is calculated. */
+  /* Calculate VLAG and BETA for the current choice of D.  The scalar product
+     of D with XPT(K,.) is going to be held in W(NPT+K) for use when VQUAD is
+     calculated. */
  L230:
   LOOP(k,npt) {
     suma = zero;
@@ -842,11 +842,11 @@ bobyqb(const INTEGER n, const INTEGER npt,
     }
   }
 
-  /* Put the variables for the next calculation of the objective function
-     in XNEW, with any adjustments for the bounds.
+  /* Put the variables for the next calculation of the objective function in
+     XNEW, with any adjustments for the bounds.
 
-     Calculate the value of the objective function at XBASE+XNEW, unless
-     the limit on the number of calculations of F has been reached. */
+     Calculate the value of the objective function at XBASE+XNEW, unless the
+     limit on the number of calculations of F has been reached. */
  L360:
   LOOP(i,n) {
     tempa = xbase[i] + xnew[i];
@@ -876,8 +876,8 @@ bobyqb(const INTEGER n, const INTEGER npt,
     goto done;
   }
 
-  /* Use the quadratic model to predict the change in F due to the step D,
-     and set DIFF to the error of this prediction. */
+  /* Use the quadratic model to predict the change in F due to the step D, and
+     set DIFF to the error of this prediction. */
   fopt = fval[kopt];
   vquad = zero;
   ih = 0;
@@ -962,7 +962,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
   }
 
   /* Update BMAT and ZMAT, so that the KNEW-th interpolation point can be
-     moved. Also update the second derivative terms of the model. */
+     moved.  Also update the second derivative terms of the model. */
   update(n, npt, &BMAT(1,1), &ZMAT(1,1), ndim, &vlag[1],
          beta, denom, knew, &w[1]);
   ih = 0;
@@ -982,8 +982,8 @@ bobyqb(const INTEGER n, const INTEGER npt,
     }
   }
 
-  /* Include the new interpolation point, and make the changes to GOPT at
-     the old XOPT that are caused by the updating of the quadratic model. */
+  /* Include the new interpolation point, and make the changes to GOPT at the
+     old XOPT that are caused by the updating of the quadratic model. */
   fval[knew] = f;
   LOOP(i,n) {
     XPT(knew,i) = xnew[i];
@@ -1108,7 +1108,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
   }
 
   /* If a trust region step has provided a sufficient decrease in F, then
-     branch for another trust region calculation. The case NTRITS=0 occurs
+     branch for another trust region calculation.  The case NTRITS=0 occurs
      when the new interpolation point was reached by an alternative step. */
   if (ntrits == 0) {
     goto L60;
@@ -1117,8 +1117,8 @@ bobyqb(const INTEGER n, const INTEGER npt,
     goto L60;
   }
 
-  /* Alternatively, find out if the interpolation points are close enough
-     to the best point so far. */
+  /* Alternatively, find out if the interpolation points are close enough to
+     the best point so far. */
   tempa = two*delta;
   tempb = ten*rho;
   tempa = tempa*tempa;
@@ -1138,11 +1138,11 @@ bobyqb(const INTEGER n, const INTEGER npt,
     }
   }
 
-  /* If KNEW is positive, then ALTMOV finds alternative new positions for
-     the KNEW-th interpolation point within distance ADELT of XOPT. It is
-     reached via label 90. Otherwise, there is a branch to label 60 for
-     another trust region iteration, unless the calculations with the
-     current RHO are complete. */
+  /* If KNEW is positive, then ALTMOV finds alternative new positions for the
+     KNEW-th interpolation point within distance ADELT of XOPT.  It is reached
+     via label 90.  Otherwise, there is a branch to label 60 for another trust
+     region iteration, unless the calculations with the current RHO are
+     complete. */
   if (knew > 0) {
     dist = SQRT(distsq);
     if (ntrits == -1) {
@@ -1170,7 +1170,7 @@ bobyqb(const INTEGER n, const INTEGER npt,
     goto L60;
   }
 
-  /* The calculations with the current value of RHO are complete. Pick the
+  /* The calculations with the current value of RHO are complete.  Pick the
      next values of RHO and DELTA. */
  L680:
   if (rho > rhoend) {
@@ -1201,8 +1201,8 @@ bobyqb(const INTEGER n, const INTEGER npt,
     goto L60;
   }
 
-  /* Return from the calculation, after another Newton-Raphson step, if
-     it is too short to have been tried before. */
+  /* Return from the calculation, after another Newton-Raphson step, if it is
+     too short to have been tried before. */
   if (ntrits == -1) {
     goto L360;
   }
@@ -1276,15 +1276,15 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
      ADELT is the current trust region bound.
 
      XNEW will be set to a suitable new position for the interpolation point
-     XPT(KNEW,.). Specifically, it satisfies the SL, SU and trust region bounds
-     and it should provide a large denominator in the next call of UPDATE. The
-     step XNEW-XOPT from XOPT is restricted to moves along the straight lines
-     through XOPT and another interpolation point.
+     XPT(KNEW,.).  Specifically, it satisfies the SL, SU and trust region
+     bounds and it should provide a large denominator in the next call of
+     UPDATE.  The step XNEW-XOPT from XOPT is restricted to moves along the
+     straight lines through XOPT and another interpolation point.
 
      XALT also provides a large value of the modulus of the KNEW-th Lagrange
      function subject to the constraints that have been mentioned, its main
      difference from XNEW being that XALT-XOPT is a constrained version of the
-     Cauchy step within the trust region. An exception is that XALT is not
+     Cauchy step within the trust region.  An exception is that XALT is not
      calculated if all components of GLAG (see below) are zero.
 
      ALPHA will be set to the KNEW-th diagonal element of the H matrix.
@@ -1338,8 +1338,8 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
   ksav = 0;
   ibdsav = 0;
 
-  /* Set the first NPT components of W to the leading elements of the
-     KNEW-th column of the H matrix. */
+  /* Set the first NPT components of W to the leading elements of the KNEW-th
+     column of the H matrix. */
   LOOP(k,npt) {
     hcol[k] = zero;
   }
@@ -1368,15 +1368,15 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
     }
   }
 
-  /* Search for a large denominator along the straight lines through XOPT
-     and another interpolation point. SLBD and SUBD will be lower and upper
-     bounds on the step along each of these lines in turn. PREDSQ will be
-     set to the square of the predicted denominator for each line. PRESAV
-     will be set to the largest admissible value of PREDSQ that occurs. */
+  /* Search for a large denominator along the straight lines through XOPT and
+     another interpolation point.  SLBD and SUBD will be lower and upper bounds
+     on the step along each of these lines in turn.  PREDSQ will be set to the
+     square of the predicted denominator for each line.  PRESAV will be set to
+     the largest admissible value of PREDSQ that occurs. */
   presav = zero;
   LOOP(k,npt) {
     if (k == kopt) {
-      goto L80;
+      continue;
     }
     dderiv = zero;
     distsq = zero;
@@ -1417,8 +1417,8 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
       }
     }
 
-    /* Seek a large modulus of the KNEW-th Lagrange function when the index
-       of the other interpolation point on the line through XOPT is KNEW. */
+    /* Seek a large modulus of the KNEW-th Lagrange function when the index of
+       the other interpolation point on the line through XOPT is KNEW. */
     if (k == knew) {
       diff = dderiv - one;
       step = slbd;
@@ -1442,7 +1442,8 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
         }
       }
 
-      /* Search along each of the other lines through XOPT and another point. */
+      /* Search along each of the other lines through XOPT and another
+         point. */
     } else {
       step = slbd;
       vlag = slbd*(one - slbd);
@@ -1472,8 +1473,6 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
       stpsav = step;
       ibdsav = isbd;
     }
-  L80:
-    ;
   }
 
   /* Construct XNEW in a way that satisfies the bound constraints exactly. */
@@ -1490,7 +1489,7 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
   }
 
   /* Prepare for the iterative method that assembles the constrained Cauchy
-     step in W. The sum of squares of the fixed components of W is formed in
+     step in W.  The sum of squares of the fixed components of W is formed in
      WFIXSQ, and the free components of W are set to BIGSTP. */
   bigstp = adelt + adelt;
   iflag = 0;
@@ -1510,7 +1509,7 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
   }
   if (ggfree == zero) {
     *cauchy = zero;
-    goto L200;
+    return;
   }
 
   /* Investigate whether more components of W can be fixed. */
@@ -1539,8 +1538,8 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
     }
   }
 
-  /* Set the remaining free components of W and all components of XALT,
-     except that W may be scaled later. */
+  /* Set the remaining free components of W and all components of XALT, except
+     that W may be scaled later. */
   gw = zero;
   LOOP(i,n) {
     if (w[i] == bigstp) {
@@ -1558,10 +1557,10 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
     gw += glag[i]*w[i];
   }
 
-  /* Set CURV to the curvature of the KNEW-th Lagrange function along W.
-     Scale W by a factor less than one if that can reduce the modulus of
-     the Lagrange function at XOPT+W. Set CAUCHY to the final value of
-     the square of this function. */
+  /* Set CURV to the curvature of the KNEW-th Lagrange function along W.  Scale
+     W by a factor less than one if that can reduce the modulus of the Lagrange
+     function at XOPT+W.  Set CAUCHY to the final value of the square of this
+     function. */
   curv = zero;
   LOOP(k,npt) {
     temp = zero;
@@ -1587,9 +1586,9 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
     *cauchy = temp*temp;
   }
 
-  /* If IFLAG is zero, then XALT is calculated as before after reversing
-     the sign of GLAG. Thus two XALT vectors become available. The one that
-     is chosen is the one that gives the larger value of CAUCHY. */
+  /* If IFLAG is zero, then XALT is calculated as before after reversing the
+     sign of GLAG.  Thus two XALT vectors become available.  The one that is
+     chosen is the one that gives the larger value of CAUCHY. */
   if (iflag == 0) {
     LOOP(i,n) {
       glag[i] = -glag[i];
@@ -1605,8 +1604,6 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
     }
     *cauchy = csave;
   }
- L200:
-  return;
 } /* altmov */
 
 #undef ZMAT
@@ -1683,8 +1680,8 @@ prelim(const INTEGER n, const INTEGER npt,
   recip = one/rhosq;
   np = n + 1;
 
-  /* Set XBASE to the initial vector of variables, and set the initial
-     elements of XPT, BMAT, HQ, PQ and ZMAT to zero. */
+  /* Set XBASE to the initial vector of variables, and set the initial elements
+     of XPT, BMAT, HQ, PQ and ZMAT to zero. */
   LOOP(j,n) {
     xbase[j] = x[j];
     LOOP(k,npt) {
@@ -1707,7 +1704,7 @@ prelim(const INTEGER n, const INTEGER npt,
   }
 
   /* Begin the initialization procedure.  NF becomes one more than the number
-     of function values so far. The coordinates of the displacement of the
+     of function values so far.  The coordinates of the displacement of the
      next initial interpolation point from XBASE are set in XPT(NF+1,.). */
   *nf = 0;
   do {
@@ -1747,8 +1744,8 @@ prelim(const INTEGER n, const INTEGER npt,
       XPT(*nf, jpt) = XPT(jpt + 1, jpt);
     }
 
-    /* Calculate the next value of F. The least function value so far and
-       its index are required. */
+    /* Calculate the next value of F.  The least function value so far and its
+       index are required. */
     LOOP(j,n) {
       temp = xbase[j] + XPT(*nf, j);
       temp = MAX(temp,xl[j]);
@@ -1778,7 +1775,7 @@ prelim(const INTEGER n, const INTEGER npt,
     }
 
     /* Set the nonzero initial elements of BMAT and the quadratic model in the
-       cases when NF is at most 2*N+1. If NF exceeds N+1, then the positions
+       cases when NF is at most 2*N+1.  If NF exceeds N+1, then the positions
        of the NF-th and (NF-N)-th interpolation points may be switched, in
        order that the function value at the first of them contributes to the
        off-diagonal second derivative terms of the initial quadratic model. */
@@ -1851,10 +1848,9 @@ rescue(const INTEGER n, const INTEGER npt,
      is set to -1 if the value of MAXFUN prevents further progress.
 
      KOPT is maintained so that FVAL(KOPT) is the least calculated function
-     value. Its correct value must be given on entry. It is updated if a new
-     least function value is found, but the corresponding changes to
-
-     XOPT and GOPT have to be made later by the calling program.
+     value.  Its correct value must be given on entry.  It is updated if a new
+     least function value is found, but the corresponding changes to XOPT and
+     GOPT have to be made later by the calling program.
 
      DELTA is the current trust region radius.
 
@@ -1862,21 +1858,21 @@ rescue(const INTEGER n, const INTEGER npt,
      provisional Lagrange functions at each of the interpolation points.  They
      are part of a product that requires VLAG to be of length NDIM.
 
-     PTSAUX is also a working space array. For J=1,2,...,N, PTSAUX(1,J) and
+     PTSAUX is also a working space array.  For J=1,2,...,N, PTSAUX(1,J) and
      PTSAUX(2,J) specify the two positions of provisional interpolation points
      when a nonzero step is taken along e_J (the J-th coordinate direction)
-     through XBASE+XOPT, as specified below. Usually these steps have length
+     through XBASE+XOPT, as specified below.  Usually these steps have length
      DELTA, but other lengths are chosen if necessary in order to satisfy the
      given bounds on the variables.
 
-     PTSID is also a working space array. It has NPT components that denote
+     PTSID is also a working space array.  It has NPT components that denote
      provisional new positions of the original interpolation points, in case
      changes are needed to restore the linear independence of the interpolation
-     conditions. The K-th point is a candidate for change if and only if
-     PTSID(K) is nonzero. In this case let p and q be the integer parts of
-     PTSID(K) and (PTSID(K)-p) multiplied by N+1. If p and q are both positive,
+     conditions.  The K-th point is a candidate for change if and only if
+     PTSID(K) is nonzero.  In this case let p and q be the integer parts of
+     PTSID(K) and (PTSID(K)-p) multiplied by N+1.  If p and q are both positive,
      the step from XBASE+XOPT to the new K-th interpolation point is
-     PTSAUX(1,p)*e_p + PTSAUX(1,q)*e_q. Otherwise the step is PTSAUX(1,p)*e_p
+     PTSAUX(1,p)*e_p + PTSAUX(1,q)*e_q.  Otherwise the step is PTSAUX(1,p)*e_p
      or PTSAUX(2,q)*e_q in the cases q=0 or p=0, respectively.
 
      The first NDIM+NPT elements of the array W are used for working space.
@@ -1913,7 +1909,7 @@ rescue(const INTEGER n, const INTEGER npt,
   vlag   -= 1;
   ptsaux -= 3;
   ptsid  -= 1;
-  w -= 1;
+  w      -= 1;
 #define XPT(a1,a2) xpt[(a2)*npt + a1]
 #define BMAT(a1,a2) bmat[(a2)*ndim + a1]
 #define ZMAT(a1,a2) zmat[(a2)*npt + a1]
@@ -1929,11 +1925,11 @@ rescue(const INTEGER n, const INTEGER npt,
   nptm = npt - np;
 
   /* Shift the interpolation points so that XOPT becomes the origin, and set
-     the elements of ZMAT to zero. The value of SUMPQ is required in the
-     updating of HQ below. The squares of the distances from XOPT to the
-     other interpolation points are set at the end of W. Increments of WINC
-     may be added later to these squares to balance the consideration of
-     the choice of point that is going to become current. */
+     the elements of ZMAT to zero.  The value of SUMPQ is required in the
+     updating of HQ below.  The squares of the distances from XOPT to the other
+     interpolation points are set at the end of W.  Increments of WINC may be
+     added later to these squares to balance the consideration of the choice of
+     point that is going to become current. */
   sumpq = zero;
   winc = zero;
   LOOP(k,npt) {
@@ -1964,8 +1960,8 @@ rescue(const INTEGER n, const INTEGER npt,
     }
   }
 
-  /* Shift XBASE, SL, SU and XOPT. Set the elements of BMAT to zero, and
-     also set the elements of PTSAUX. */
+  /* Shift XBASE, SL, SU and XOPT.  Set the elements of BMAT to zero, and also
+     set the elements of PTSAUX. */
   LOOP(j,n) {
     xbase[j] += xopt[j];
     sl[j] -= xopt[j];
@@ -1987,9 +1983,9 @@ rescue(const INTEGER n, const INTEGER npt,
   }
   fbase = fval[*kopt];
 
-  /* Set the identifiers of the artificial interpolation points that are
-     along a coordinate direction from XOPT, and set the corresponding
-     nonzero elements of BMAT and ZMAT. */
+  /* Set the identifiers of the artificial interpolation points that are along
+     a coordinate direction from XOPT, and set the corresponding nonzero
+     elements of BMAT and ZMAT. */
   ptsid[1] = sfrac;
   LOOP(j,n) {
     jp = j + 1;
@@ -2032,8 +2028,8 @@ rescue(const INTEGER n, const INTEGER npt,
   kold = 1;
   knew = *kopt;
 
-  /* Reorder the provisional points in the way that exchanges PTSID(KOLD)
-     with PTSID(KNEW). */
+  /* Reorder the provisional points in the way that exchanges PTSID(KOLD) with
+     PTSID(KNEW). */
  L80:
   LOOP(j,n) {
     temp = BMAT(kold,j);
@@ -2055,7 +2051,7 @@ rescue(const INTEGER n, const INTEGER npt,
     vlag[knew] = temp;
 
     /* Update the BMAT and ZMAT matrices so that the status of the KNEW-th
-       interpolation point can be changed from provisional to original. The
+       interpolation point can be changed from provisional to original.  The
        branch to label 350 occurs if all the original points are reinstated.
        The nonnegative values of W(NDIM+K) are required in the search below. */
     update(n, npt, &BMAT(1,1), &ZMAT(1,1), ndim, &vlag[1],
@@ -2068,9 +2064,9 @@ rescue(const INTEGER n, const INTEGER npt,
     }
   }
 
-  /* Pick the index KNEW of an original interpolation point that has not
-     yet replaced one of the provisional interpolation points, giving
-     attention to the closeness to XOPT and to previous tries with KNEW. */
+  /* Pick the index KNEW of an original interpolation point that has not yet
+     replaced one of the provisional interpolation points, giving attention to
+     the closeness to XOPT and to previous tries with KNEW. */
  L120:
   dsqmin = zero;
   LOOP(k,npt) {
@@ -2154,7 +2150,7 @@ rescue(const INTEGER n, const INTEGER npt,
 
   /* KOLD is set to the index of the provisional interpolation point that is
      going to be deleted to make way for the KNEW-th original interpolation
-     point. The choice of KOLD is governed by the avoidance of a small value
+     point.  The choice of KOLD is governed by the avoidance of a small value
      of the denominator in the updating calculation of UPDATE. */
   denom = zero;
   vlmxsq = zero;
@@ -2180,16 +2176,16 @@ rescue(const INTEGER n, const INTEGER npt,
   goto L80;
 
   /* When label 260 is reached, all the final positions of the interpolation
-     points have been chosen although any changes have not been included yet
-     in XPT. Also the final BMAT and ZMAT matrices are complete, but, apart
-     from the shift of XBASE, the updating of the quadratic model remains to
-     be done. The following cycle through the new interpolation points begins
-     by putting the new point in XPT(KPT,.) and by setting PQ(KPT) to zero,
-     except that a RETURN occurs if MAXFUN prohibits another value of F. */
+     points have been chosen although any changes have not been included yet in
+     XPT.  Also the final BMAT and ZMAT matrices are complete, but, apart from
+     the shift of XBASE, the updating of the quadratic model remains to be
+     done.  The following cycle through the new interpolation points begins by
+     putting the new point in XPT(KPT,.) and by setting PQ(KPT) to zero, except
+     that a RETURN occurs if MAXFUN prohibits another value of F. */
  L260:
   LOOP(kpt,npt) {
     if (ptsid[kpt] == zero) {
-      goto L340;
+      continue;
     }
     if (*nf >= maxfun) {
       *nf = -1;
@@ -2247,8 +2243,8 @@ rescue(const INTEGER n, const INTEGER npt,
     }
 
     /* Calculate F at the new interpolation point, and set DIFF to the factor
-       that is going to multiply the KPT-th Lagrange function when the model
-       is updated to provide interpolation to the new function value. */
+       that is going to multiply the KPT-th Lagrange function when the model is
+       updated to provide interpolation to the new function value. */
     LOOP(i,n) {
       temp = xbase[i] + XPT(kpt,i);
       temp = MAX(temp,xl[i]);
@@ -2276,7 +2272,7 @@ rescue(const INTEGER n, const INTEGER npt,
     }
     diff = f - vquad;
 
-    /* Update the quadratic model. The RETURN from the subroutine occurs when
+    /* Update the quadratic model.  The RETURN from the subroutine occurs when
        all the new interpolation points are included in the model. */
     LOOP(i,n) {
       gopt[i] += diff*BMAT(kpt,i);
@@ -2307,8 +2303,6 @@ rescue(const INTEGER n, const INTEGER npt,
       }
     }
     ptsid[kpt] = zero;
-  L340:
-    ;
   }
  L350:
   return;
@@ -2336,38 +2330,38 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
 
      XNEW will be set to a new vector of variables that is approximately the
      one that minimizes the quadratic model within the trust region subject to
-     the SL and SU constraints on the variables. It satisfies as equations the
+     the SL and SU constraints on the variables.  It satisfies as equations the
      bounds that become active during the calculation.
 
      D is the calculated trial step from XOPT, generated iteratively from an
-     initial value of zero. Thus XNEW is XOPT+D after the final iteration.
+     initial value of zero.  Thus XNEW is XOPT+D after the final iteration.
 
-     GNEW holds the gradient of the quadratic model at XOPT+D. It is updated
+     GNEW holds the gradient of the quadratic model at XOPT+D.  It is updated
      when D is updated.
 
-     XBDI is a working space vector. For I=1,2,...,N, the element XBDI(I) is
+     XBDI is a working space vector.  For I=1,2,...,N, the element XBDI(I) is
      set to -1.0, 0.0, or 1.0, the value being nonzero if and only if the I-th
      variable has become fixed at a bound, the bound being SL(I) or SU(I) in
-     the case XBDI(I)=-1.0 or XBDI(I)=1.0, respectively. This information is
+     the case XBDI(I)=-1.0 or XBDI(I)=1.0, respectively.  This information is
      accumulated during the construction of XNEW.  The arrays S, HS and HRED
-     are also used for working space. They hold the current search direction,
+     are also used for working space.  They hold the current search direction,
      and the changes in the gradient of Q along S and the reduced D,
      respectively, where the reduced D is the same as D, except that the
      components of the fixed variables are zero.
 
      DSQ will be set to the square of the length of XNEW-XOPT.
 
-     CRVMIN is set to zero if D reaches the trust region boundary. Otherwise it
+     CRVMIN is set to zero if D reaches the trust region boundary.  Otherwise it
      is set to the least curvature of H that occurs in the conjugate gradient
-     searches that are not restricted by any constraints. The value
+     searches that are not restricted by any constraints.  The value
      CRVMIN=-1.0D0 is set, however, if all of these searches are constrained.
 
-     A version of the truncated conjugate gradient is applied. If a line search
+     A version of the truncated conjugate gradient is applied.  If a line search
      is restricted by a constraint, then the procedure is restarted, the values
-     of the variables that are at their bounds being fixed. If the trust region
+     of the variables that are at their bounds being fixed.  If the trust region
      boundary is reached, then further changes may be made to D, each one being
      in the two dimensional space that is spanned by the current D and the
-     gradient of Q at XOPT+D, staying on the trust region boundary. Termination
+     gradient of Q at XOPT+D, staying on the trust region boundary.  Termination
      occurs when the reduction in Q seems to be close to the greatest reduction
      that can be achieved. */
 
@@ -2413,12 +2407,12 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
   itcsav = 0;
   itermax = 0;
 
-  /* The sign of GOPT(I) gives the sign of the change to the I-th variable
-     that will reduce Q from its value at XOPT. Thus XBDI(I) shows whether
-     or not to fix the I-th variable at one of its bounds initially, with
-     NACT being set to the number of fixed variables. D and GNEW are also
-     set for the first iteration. DELSQ is the upper bound on the sum of
-     squares of the free variables. QRED is the reduction in Q so far. */
+  /* The sign of GOPT(I) gives the sign of the change to the I-th variable that
+     will reduce Q from its value at XOPT.  Thus XBDI(I) shows whether or not
+     to fix the I-th variable at one of its bounds initially, with NACT being
+     set to the number of fixed variables.  D and GNEW are also set for the
+     first iteration.  DELSQ is the upper bound on the sum of squares of the
+     free variables.  QRED is the reduction in Q so far. */
   iterc = 0;
   nact = 0;
   LOOP(i,n) {
@@ -2442,11 +2436,11 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
   qred = zero;
   *crvmin = onemin;
 
-  /* Set the next search direction of the conjugate gradient method. It is
-     the steepest descent direction initially and when the iterations are
-     restarted because a variable has just been fixed by a bound, and of
-     course the components of the fixed variables are zero. ITERMAX is an
-     upper bound on the indices of the conjugate gradient iterations. */
+  /* Set the next search direction of the conjugate gradient method.  It is the
+     steepest descent direction initially and when the iterations are restarted
+     because a variable has just been fixed by a bound, and of course the
+     components of the fixed variables are zero.  ITERMAX is an upper bound on
+     the indices of the conjugate gradient iterations. */
  L20:
   beta = zero;
  L30:
@@ -2473,9 +2467,9 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
   }
 
   /* Multiply the search direction by the second derivative matrix of Q and
-     calculate some scalars for the choice of steplength. Then set BLEN to
-     the length of the the step to the trust region boundary and STPLEN to
-     the steplength, ignoring the simple bounds. */
+     calculate some scalars for the choice of steplength.  Then set BLEN to the
+     length of the the step to the trust region boundary and STPLEN to the
+     steplength, ignoring the simple bounds. */
   goto L210;
  L50:
   resid = delsq;
@@ -2504,8 +2498,8 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
     stplen = blen;
   }
 
-  /* Reduce STPLEN if necessary in order to preserve the simple bounds,
-     letting IACT be the index of the new constrained variable. */
+  /* Reduce STPLEN if necessary in order to preserve the simple bounds, letting
+     IACT be the index of the new constrained variable. */
   iact = 0;
   LOOP(i,n) {
     if (s[i] != zero) {
@@ -2522,7 +2516,7 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
     }
   }
 
-  /* Update CRVMIN, GNEW and D. Set SDEC to the decrease that occurs in Q. */
+  /* Update CRVMIN, GNEW and D.  Set SDEC to the decrease that occurs in Q. */
   sdec = zero;
   if (stplen > zero) {
     ++iterc;
@@ -2561,8 +2555,8 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
     goto L20;
   }
 
-  /* If STPLEN is less than BLEN, then either apply another conjugate
-     gradient iteration or RETURN. */
+  /* If STPLEN is less than BLEN, then either apply another conjugate gradient
+     iteration or RETURN. */
   if (stplen < blen) {
     if (iterc == itermax) {
       goto L190;
@@ -2576,8 +2570,8 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
  L90:
   *crvmin = zero;
 
-  /* Prepare for the alternative iteration by calculating some scalars and
-     by multiplying the reduced D by the second derivative matrix of Q. */
+  /* Prepare for the alternative iteration by calculating some scalars and by
+     multiplying the reduced D by the second derivative matrix of Q. */
  L100:
   if (nact >= n - 1) {
     goto L190;
@@ -2598,8 +2592,8 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
   itcsav = iterc;
   goto L210;
 
-  /* Let the search direction S be a linear combination of the reduced D
-     and the reduced G that is orthogonal to the reduced D. */
+  /* Let the search direction S be a linear combination of the reduced D and
+     the reduced G that is orthogonal to the reduced D. */
  L120:
   ++iterc;
   temp = gredsq*dredsq - dredg*dredg;
@@ -2695,8 +2689,8 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
     redsav = rednew;
   }
 
-  /* Return if the reduction is zero. Otherwise, set the sine and cosine of the
-     angle of the alternative iteration, and calculate SDEC. */
+  /* Return if the reduction is zero.  Otherwise, set the sine and cosine of
+     the angle of the alternative iteration, and calculate SDEC. */
   if (isav == 0) {
     goto L190;
   }
@@ -2712,7 +2706,7 @@ trsbox(const INTEGER n, const INTEGER npt, REAL* xpt,
     goto L190;
   }
 
-  /* Update GNEW, D and HRED. If the angle of the alternative iteration is
+  /* Update GNEW, D and HRED.  If the angle of the alternative iteration is
      restricted by a bound on a free variable, that variable is fixed at the
      bound. */
   dredg = zero;
@@ -2802,14 +2796,14 @@ update(const INTEGER n, const INTEGER npt, REAL* bmat,
        REAL* zmat, const INTEGER ndim, REAL* vlag, const REAL beta,
        const REAL denom, const INTEGER knew, REAL* w)
 {
-  /* The arrays BMAT and ZMAT are updated, as required by the new position
-     of the interpolation point that has the index KNEW. The vector VLAG has
-     N+NPT components, set on entry to the first NPT and last N components
-     of the product Hw in equation (4.11) of the Powell (2006) paper on
-     NEWUOA. Further, BETA is set on entry to the value of the parameter
-     with that name, and DENOM is set to the denominator of the updating
-     formula. Elements of ZMAT may be treated as zero if their moduli are
-     at most ZTEST. The first NDIM elements of W are used for working space. */
+  /* The arrays BMAT and ZMAT are updated, as required by the new position of
+     the interpolation point that has the index KNEW.  The vector VLAG has
+     N+NPT components, set on entry to the first NPT and last N components of
+     the product Hw in equation (4.11) of the Powell (2006) paper on NEWUOA.
+     Further, BETA is set on entry to the value of the parameter with that
+     name, and DENOM is set to the denominator of the updating formula.
+     Elements of ZMAT may be treated as zero if their moduli are at most ZTEST.
+     The first NDIM elements of W are used for working space. */
 
   /* Constants. */
   const REAL one = 1.0;
@@ -2855,8 +2849,8 @@ update(const INTEGER n, const INTEGER npt, REAL* bmat,
     ZMAT(knew, j) = zero;
   }
 
-  /* Put the first NPT components of the KNEW-th column of HLAG into W,
-     and calculate the parameters of the updating formula. */
+  /* Put the first NPT components of the KNEW-th column of HLAG into W, and
+     calculate the parameters of the updating formula. */
   LOOP(i,npt) {
     w[i] = ZMAT(knew,1)*ZMAT(i,1);
   }
