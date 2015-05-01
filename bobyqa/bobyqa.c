@@ -1493,107 +1493,108 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
      WFIXSQ, and the free components of W are set to BIGSTP. */
   bigstp = adelt + adelt;
   iflag = 0;
- L100:
-  wfixsq = zero;
-  ggfree = zero;
-  LOOP(i,n) {
-    w[i] = zero;
-    tempa = xopt[i] - sl[i];
-    tempa = MIN(tempa,glag[i]);
-    tempb = xopt[i] - su[i];
-    tempb = MAX(tempb,glag[i]);
-    if (tempa > zero || tempb < zero) {
-      w[i] = bigstp;
-      ggfree += glag[i]*glag[i];
-    }
-  }
-  if (ggfree == zero) {
-    *cauchy = zero;
-    return;
-  }
-
-  /* Investigate whether more components of W can be fixed. */
-  do {
-    temp = adelt*adelt - wfixsq;
-    if (temp <= zero) break;
-    wsqsav = wfixsq;
-    step = SQRT(temp/ggfree);
+  for (;;) {
+    wfixsq = zero;
     ggfree = zero;
     LOOP(i,n) {
-      if (w[i] == bigstp) {
-        temp = xopt[i] - step*glag[i];
-        if (temp <= sl[i]) {
-          w[i] = sl[i] - xopt[i];
-          wfixsq += w[i]*w[i];
-        } else if (temp >= su[i]) {
-          w[i] = su[i] - xopt[i];
-          wfixsq += w[i]*w[i];
-        } else {
-          ggfree += glag[i]*glag[i];
-        }
+      w[i] = zero;
+      tempa = xopt[i] - sl[i];
+      tempa = MIN(tempa,glag[i]);
+      tempb = xopt[i] - su[i];
+      tempb = MAX(tempb,glag[i]);
+      if (tempa > zero || tempb < zero) {
+        w[i] = bigstp;
+        ggfree += glag[i]*glag[i];
       }
     }
-  } while (wfixsq > wsqsav && ggfree > zero);
-
-  /* Set the remaining free components of W and all components of XALT, except
-     that W may be scaled later. */
-  gw = zero;
-  LOOP(i,n) {
-    if (w[i] == bigstp) {
-      w[i] = -step*glag[i];
-      temp = xopt[i] + w[i];
-      temp = MIN(temp,su[i]);
-      xalt[i] = MAX(temp,sl[i]);
-    } else if (w[i] == zero) {
-      xalt[i] = xopt[i];
-    } else if (glag[i] > zero) {
-      xalt[i] = sl[i];
-    } else {
-      xalt[i] = su[i];
+    if (ggfree == zero) {
+      *cauchy = zero;
+      return;
     }
-    gw += glag[i]*w[i];
-  }
 
-  /* Set CURV to the curvature of the KNEW-th Lagrange function along W.  Scale
-     W by a factor less than one if that can reduce the modulus of the Lagrange
-     function at XOPT+W.  Set CAUCHY to the final value of the square of this
-     function. */
-  curv = zero;
-  LOOP(k,npt) {
-    temp = zero;
-    LOOP(j,n) {
-      temp += XPT(k,j)*w[j];
-    }
-    curv += hcol[k]*temp*temp;
-  }
-  if (iflag == 1) {
-    curv = -curv;
-  }
-  if (curv > -gw && curv < -one_plus_sqrt2*gw) {
-    scale = -gw/curv;
+    /* Investigate whether more components of W can be fixed. */
+    do {
+      temp = adelt*adelt - wfixsq;
+      if (temp <= zero) break;
+      wsqsav = wfixsq;
+      step = SQRT(temp/ggfree);
+      ggfree = zero;
+      LOOP(i,n) {
+        if (w[i] == bigstp) {
+          temp = xopt[i] - step*glag[i];
+          if (temp <= sl[i]) {
+            w[i] = sl[i] - xopt[i];
+            wfixsq += w[i]*w[i];
+          } else if (temp >= su[i]) {
+            w[i] = su[i] - xopt[i];
+            wfixsq += w[i]*w[i];
+          } else {
+            ggfree += glag[i]*glag[i];
+          }
+        }
+      }
+    } while (wfixsq > wsqsav && ggfree > zero);
+
+    /* Set the remaining free components of W and all components of XALT,
+       except that W may be scaled later. */
+    gw = zero;
     LOOP(i,n) {
-      temp = xopt[i] + scale*w[i];
-      temp = MIN(temp,su[i]);
-      xalt[i] = MAX(temp,sl[i]);
+      if (w[i] == bigstp) {
+        w[i] = -step*glag[i];
+        temp = xopt[i] + w[i];
+        temp = MIN(temp,su[i]);
+        xalt[i] = MAX(temp,sl[i]);
+      } else if (w[i] == zero) {
+        xalt[i] = xopt[i];
+      } else if (glag[i] > zero) {
+        xalt[i] = sl[i];
+      } else {
+        xalt[i] = su[i];
+      }
+      gw += glag[i]*w[i];
     }
-    temp = half*gw*scale;
-    *cauchy = temp*temp;
-  } else {
-    temp = gw + half*curv;
-    *cauchy = temp*temp;
-  }
 
-  /* If IFLAG is zero, then XALT is calculated as before after reversing the
-     sign of GLAG.  Thus two XALT vectors become available.  The one that is
-     chosen is the one that gives the larger value of CAUCHY. */
-  if (iflag == 0) {
+    /* Set CURV to the curvature of the KNEW-th Lagrange function along W.
+       Scale W by a factor less than one if that can reduce the modulus of the
+       Lagrange function at XOPT+W.  Set CAUCHY to the final value of the
+       square of this function. */
+    curv = zero;
+    LOOP(k,npt) {
+      temp = zero;
+      LOOP(j,n) {
+        temp += XPT(k,j)*w[j];
+      }
+      curv += hcol[k]*temp*temp;
+    }
+    if (iflag == 1) {
+      curv = -curv;
+    }
+    if (curv > -gw && curv < -one_plus_sqrt2*gw) {
+      scale = -gw/curv;
+      LOOP(i,n) {
+        temp = xopt[i] + scale*w[i];
+        temp = MIN(temp,su[i]);
+        xalt[i] = MAX(temp,sl[i]);
+      }
+      temp = half*gw*scale;
+      *cauchy = temp*temp;
+    } else {
+      temp = gw + half*curv;
+      *cauchy = temp*temp;
+    }
+
+    /* If IFLAG is zero, then XALT is calculated as before after reversing the
+       sign of GLAG.  Thus two XALT vectors become available.  The one that is
+       chosen is the one that gives the larger value of CAUCHY. */
+    if (iflag != 0) {
+      break;
+    }
     LOOP(i,n) {
       glag[i] = -glag[i];
       w[n + i] = xalt[i];
     }
     csave = *cauchy;
     iflag = 1;
-    goto L100;
   }
   if (csave > *cauchy) {
     LOOP(i,n) {
