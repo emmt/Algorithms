@@ -119,15 +119,15 @@ cobyla(INTEGER n, INTEGER m, cobyla_calcfc* calcfc, void* calcfc_data,
   REAL* con = w;
   REAL* sim = con + mpp;
   REAL* simi = sim + n*n + n;
-  REAL* datm = simi + n*n;
-  REAL* a = datm + n*mpp + mpp;
+  REAL* datmat = simi + n*n;
+  REAL* a = datmat + n*mpp + mpp;
   REAL* vsig = a + m*n + n;
   REAL* veta = vsig + n;
-  REAL* sigb = veta + n;
-  REAL* dx = sigb + n;
+  REAL* sigbar = veta + n;
+  REAL* dx = sigbar + n;
   REAL* work = dx + n;
   return cobylb(n, m, mpp, calcfc, calcfc_data, x, rhobeg, rhoend, iprint,
-                maxfun, con, sim, simi, datm, a, vsig, veta, sigb, dx, work,
+                maxfun, con, sim, simi, datmat, a, vsig, veta, sigbar, dx, work,
                 iact);
 }
 
@@ -689,11 +689,11 @@ struct _cobyla_context {
   REAL* con; /* constraints + more (M + 2 elements) */
   REAL* sim;
   REAL* simi;
-  REAL* datm;
+  REAL* datmat;
   REAL* a;
   REAL* vsig;
   REAL* veta;
-  REAL* sigb;
+  REAL* sigbar;
   REAL* dx;
   REAL* z;
   REAL* zdota;
@@ -742,22 +742,22 @@ cobyla_create(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
     for the main calculation. */
   mp = m + 1;
   mpp = m + 2;
-  ctx->iact  = ADDRESS(INTEGER, ctx, iact_offset);
-  ctx->con   = ADDRESS(REAL, ctx, w_offset);
-  ctx->sim   = ctx->con + mpp;
-  ctx->simi  = ctx->sim + n*n + n;
-  ctx->datm  = ctx->simi + n*n;
-  ctx->a     = ctx->datm + n*mpp + mpp;
-  ctx->vsig  = ctx->a + m*n + n;
-  ctx->veta  = ctx->vsig + n;
-  ctx->sigb  = ctx->veta + n;
-  ctx->dx    = ctx->sigb + n;
-  ctx->z     = ctx->dx + n;
-  ctx->zdota = ctx->z + n*n;
-  ctx->vmc   = ctx->zdota + n;
-  ctx->sdirn = ctx->vmc + mp;
-  ctx->dxnew = ctx->sdirn + n;
-  ctx->vmd   = ctx->dxnew + n;
+  ctx->iact   = ADDRESS(INTEGER, ctx, iact_offset);
+  ctx->con    = ADDRESS(REAL, ctx, w_offset);
+  ctx->sim    = ctx->con + mpp;
+  ctx->simi   = ctx->sim + n*n + n;
+  ctx->datmat = ctx->simi + n*n;
+  ctx->a      = ctx->datmat + n*mpp + mpp;
+  ctx->vsig   = ctx->a + m*n + n;
+  ctx->veta   = ctx->vsig + n;
+  ctx->sigbar = ctx->veta + n;
+  ctx->dx     = ctx->sigbar + n;
+  ctx->z      = ctx->dx + n;
+  ctx->zdota  = ctx->z + n*n;
+  ctx->vmc    = ctx->zdota + n;
+  ctx->sdirn  = ctx->vmc + mp;
+  ctx->dxnew  = ctx->sdirn + n;
+  ctx->vmd    = ctx->dxnew + n;
 
   return ctx;
 }
@@ -826,6 +826,9 @@ cobyla_get_rho(const cobyla_context_t* ctx)
 #define      W(a1)         w[a1 - 1]
 #define      X(a1)         x[a1 - 1]
 
+#define RESTORE(var)  var = ctx->var
+#define SAVE(var)     ctx->var = var
+
 int
 cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[])
 {
@@ -860,22 +863,22 @@ cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[])
   }
 
   /* Initialize local variables. */
-  n = ctx->n;
-  m = ctx->m;
+  RESTORE(n);
+  RESTORE(m);
   np = n + 1;
   mp = m + 1;
   mpp = m + 2;
-  iact   = ctx->iact;
-  con    = ctx->con;
-  sim    = ctx->sim;
-  simi   = ctx->simi;
-  datmat = ctx->datm;
-  a      = ctx->a;
-  vsig   = ctx->vsig;
-  veta   = ctx->veta;
-  sigbar = ctx->sigb;
-  dx     = ctx->dx;
-  w      = ctx->z; /* used as a working vector */
+  RESTORE(iact);
+  RESTORE(con);
+  RESTORE(sim);
+  RESTORE(simi);
+  RESTORE(datmat);
+  RESTORE(a);
+  RESTORE(vsig);
+  RESTORE(veta);
+  RESTORE(sigbar);
+  RESTORE(dx);
+  w = ctx->z; /* used as a working vector */
   if (ctx->nfvals <= 0) {
     /* Set the initial values of some parameters.  The last column of SIM holds
        the optimal vertex of the current simplex, and the preceding N columns
@@ -907,16 +910,16 @@ cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[])
     }
   } else {
     /* Restore variables. */
-    ibrnch = ctx->ibrnch;
-    iflag  = ctx->iflag;
-    ifull  = ctx->ifull;
-    jdrop  = ctx->jdrop;
-    parmu  = ctx->parmu;
-    parsig = ctx->parsig;
-    prerec = ctx->prerec;
-    prerem = ctx->prerem;
-    resmax = ctx->resmax;
-    rho    = ctx->rho;
+    RESTORE(ibrnch);
+    RESTORE(iflag);
+    RESTORE(ifull);
+    RESTORE(jdrop);
+    RESTORE(parmu);
+    RESTORE(parsig);
+    RESTORE(prerec);
+    RESTORE(prerem);
+    RESTORE(resmax);
+    RESTORE(rho);
   }
 
   /* Set the values in CON: copy the M constraints, plus the function value F
@@ -1335,17 +1338,17 @@ cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[])
 
   /* Restore local variables and return status. */
  done:
-  ctx->ibrnch = ibrnch;
-  ctx->iflag  = iflag;
-  ctx->ifull  = ifull;
-  ctx->jdrop  = jdrop;
-  ctx->parmu  = parmu;
-  ctx->parsig = parsig;
-  ctx->prerec = prerec;
-  ctx->prerem = prerem;
-  ctx->resmax = resmax;
-  ctx->rho    = rho;
-  ctx->status = status;
+  SAVE(ibrnch);
+  SAVE(iflag);
+  SAVE(ifull);
+  SAVE(jdrop);
+  SAVE(parmu);
+  SAVE(parsig);
+  SAVE(prerec);
+  SAVE(prerem);
+  SAVE(resmax);
+  SAVE(rho);
+  SAVE(status);
   return status;
 
   /* Make the next call of the user-supplied subroutine CALCFC.  These
@@ -1377,6 +1380,9 @@ cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[])
 #undef VSIG
 #undef W
 #undef X
+
+#undef RESTORE
+#undef SAVE
 
 /*---------------------------------------------------------------------------*/
 
