@@ -402,8 +402,8 @@ bobyqb(const INTEGER n, const INTEGER npt,
      NDIM is the first dimension of BMAT and has the value NPT+N.
 
      SL and SU hold the differences XL-XBASE and XU-XBASE, respectively.  All
-     the components of every XOPT are going to satisfy the bounds SL(I)
-     <= XOPT(I) <= SU(I), with appropriate equalities when XOPT is on a
+     the components of every XOPT are going to satisfy the bounds
+     SL(I) <= XOPT(I) <= SU(I), with appropriate equalities when XOPT is on a
      constraint boundary.
 
      XNEW is chosen by SUBROUTINE TRSBOX or ALTMOV.  Usually XBASE+XNEW is the
