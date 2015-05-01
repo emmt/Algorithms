@@ -1513,9 +1513,9 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
   }
 
   /* Investigate whether more components of W can be fixed. */
- L120:
-  temp = adelt*adelt - wfixsq;
-  if (temp > zero) {
+  do {
+    temp = adelt*adelt - wfixsq;
+    if (temp <= zero) break;
     wsqsav = wfixsq;
     step = SQRT(temp/ggfree);
     ggfree = zero;
@@ -1533,10 +1533,7 @@ altmov(const INTEGER n, const INTEGER npt, REAL xpt[],
         }
       }
     }
-    if (wfixsq > wsqsav && ggfree > zero) {
-      goto L120;
-    }
-  }
+  } while (wfixsq > wsqsav && ggfree > zero);
 
   /* Set the remaining free components of W and all components of XALT, except
      that W may be scaled later. */
