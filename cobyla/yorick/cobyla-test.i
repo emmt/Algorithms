@@ -321,7 +321,7 @@ func cobyla_test(prob)
       x = xinit;
       nevals = 0;
       ctx = cobyla_create(n, m, rhobeg, rhoend, iprint, maxfun);
-      while (ctx.status == COBYLA_CALC_FC) {
+      while (ctx.status == COBYLA_ITERATE) {
         f = fn(x, c);
         cobyla_iterate, ctx, f, x, c;
         ++nevals;

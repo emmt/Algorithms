@@ -130,7 +130,8 @@ extern int cobyla_(INTEGER* n, INTEGER* m, REAL x[],
                    INTEGER* maxfun, REAL w[], INTEGER iact[]);
 
 /* Possible values returned by COBYLA. */
-#define COBYLA_CALC_FC                 (1) /* user requested to compute
+#define COBYLA_INITIAL_ITERATE         (2) /* only used internally */
+#define COBYLA_ITERATE                 (1) /* user requested to compute
                                               F(X) and C(X) */
 #define COBYLA_SUCCESS                 (0) /* algorithm converged */
 #define COBYLA_ROUNDING_ERRORS        (-1)
@@ -154,7 +155,7 @@ typedef struct _cobyla_context cobyla_context_t;
    x[...] = ...; // initial solution
    ctx = cobyla_create(N, M, RHOBEG, RHOEND, IPRINT, MAXFUN);
    status = cobyla_get_status(ctx);
-   while (status == COBYLA_CALC_FC) {
+   while (status == COBYLA_ITERATE) {
      f = ...; // compute function value at X
      c[...] = ...; // compute constraints at X
      status = cobyla_iterate(ctx, f, x, c);
@@ -176,9 +177,9 @@ extern void
 cobyla_delete(cobyla_context_t* ctx);
 
 /* Perform the next iteration of the reverse communication version of the
-   COBYLA algorithm.  On entry, the wokspace status must be `COBYLA_CALC_FC`,
+   COBYLA algorithm.  On entry, the wokspace status must be `COBYLA_ITERATE`,
    `f` and `c` are the function value and the constraints at `x`.  On exit, the
-   returned value (the new wokspace status) is: `COBYLA_CALC_FC` if a new trial
+   returned value (the new wokspace status) is: `COBYLA_ITERATE` if a new trial
    point has been stored in `x` and if user is requested to compute the
    function value and the constraints on the new point; `COBYLA_SUCCESS` if
    algorithm has converged; anything else indicate an error (see
@@ -191,7 +192,7 @@ cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[]);
 extern int
 cobyla_restart(cobyla_context_t* ctx);
 
-/* Get the current status of the algorithm.  Result is: `COBYLA_CALC_FC` if
+/* Get the current status of the algorithm.  Result is: `COBYLA_ITERATE` if
    user is requested to compute F(X) and C(X); `COBYLA_SUCCESS` if algorithm
    has converged; anything else indicate an error (see `cobyla_reason` for an
    explanatory message). */

@@ -182,7 +182,7 @@ void Y_cobyla_reason(int argc)
 void Y_cobyla_init(int argc)
 {
 #define SET_GLOBAL(x) set_global_int(#x, x)
-  SET_GLOBAL(COBYLA_CALC_FC);
+  SET_GLOBAL(COBYLA_ITERATE);
   SET_GLOBAL(COBYLA_SUCCESS);
   SET_GLOBAL(COBYLA_ROUNDING_ERRORS);
   SET_GLOBAL(COBYLA_TOO_MANY_EVALUATIONS);

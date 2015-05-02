@@ -11,7 +11,7 @@
 
 if (is_func(plug_in)) plug_in, "ycobyla";
 
-local COBYLA_SUCCESS, COBYLA_CALC_FC, COBYLA_ROUNDING_ERRORS;
+local COBYLA_SUCCESS, COBYLA_ITERATE, COBYLA_ROUNDING_ERRORS;
 local COBYLA_TOO_MANY_EVALUATIONS, COBYLA_BAD_ADDRESS;
 local COBYLA_CORRUPTED;
 extern cobyla_create;
@@ -42,7 +42,7 @@ extern cobyla_iterate;
 
      >   ctx = cobyla_create(n, m, rhobeg, rhoend, iprint, maxfun);
      >   x = ...; // initial solution
-     >   while (ctx.status == COBYLA_CALC_FC) {
+     >   while (ctx.status == COBYLA_ITERATE) {
      >     f = ...; // compute function value at X
      >     c = ...; // compute constraints at X, if any
      >     cobyla_iterate, ctx, f, x, c;
