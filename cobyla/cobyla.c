@@ -185,7 +185,7 @@ struct _cobyla_context {
   REAL* dx;
   REAL* w;
 
-  REAL parmu, parsig, prerec, prerem, resmax, rho;
+  REAL parmu, parsig, prerec, prerem, rho;
   INTEGER ibrnch, iflag, ifull, jdrop;
 
   int status;
@@ -344,9 +344,9 @@ cobylb(const INTEGER n, const INTEGER m,
   /* Local variables (for each type, real or integer, the first group of
      variables are those which must be preserved between calls in a reverse
      communication version of the algorithm). */
-  REAL parmu, parsig, prerec, prerem, resmax, rho;
+  REAL parmu, parsig, prerec, prerem, rho;
   REAL barmu, cvmaxm, cvmaxp, dxsign, edgmax, error, pareta, phi, phimin,
-    ratio, resnew, sum, temp, tempa, trured, vmnew, vmold;
+    ratio, resmax, resnew, sum, temp, tempa, trured, vmnew, vmold;
   INTEGER ibrnch, iflag, ifull, jdrop, nfvals, maxfun;
   INTEGER i, j, k, l, mp, mpp, np, nbest;
 #ifdef _COBYLA_REVCOM
@@ -442,7 +442,6 @@ cobylb(const INTEGER n, const INTEGER m,
     RESTORE(parsig);
     RESTORE(prerec);
     RESTORE(prerem);
-    RESTORE(resmax);
     RESTORE(rho);
     RESTORE(ibrnch);
     RESTORE(iflag);
@@ -478,6 +477,8 @@ cobylb(const INTEGER n, const INTEGER m,
   f = calcfc(n, m, x, con, calcfc_data);
 #endif
   ++nfvals;
+
+  /* Estimate the worst constraint RESMAX. */
   resmax = zero;
 #ifdef _COBYLA_REVCOM
   for (k = 0; k < m; ++k) {
@@ -916,7 +917,6 @@ cobylb(const INTEGER n, const INTEGER m,
   SAVE(parsig);
   SAVE(prerec);
   SAVE(prerem);
-  SAVE(resmax);
   SAVE(rho);
   SAVE(ibrnch);
   SAVE(iflag);
