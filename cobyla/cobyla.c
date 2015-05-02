@@ -185,7 +185,7 @@ struct _cobyla_context {
   REAL* dx;
   REAL* w;
 
-  REAL parmu, parsig, prerec, prerem, rho;
+  REAL parmu, parsig, prerec, prerem, rho, f;
   INTEGER ibrnch, iflag, ifull, jdrop;
 
   int status;
@@ -291,6 +291,16 @@ cobyla_get_rho(const cobyla_context_t* ctx)
     return -1;
   }
   return ctx->rho;
+}
+
+REAL
+cobyla_get_last_f(const cobyla_context_t* ctx)
+{
+  if (ctx == NULL) {
+    errno = EFAULT;
+    return -1;
+  }
+  return ctx->f;
 }
 
 /* Include this file with the macro _COBYLA_REVCOM defined to
@@ -918,6 +928,7 @@ cobylb(const INTEGER n, const INTEGER m,
   SAVE(prerec);
   SAVE(prerem);
   SAVE(rho);
+  SAVE(f);
   SAVE(ibrnch);
   SAVE(iflag);
   SAVE(ifull);

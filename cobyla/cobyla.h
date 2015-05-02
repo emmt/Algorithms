@@ -111,10 +111,10 @@ extern int cobyla(INTEGER n, INTEGER m,
                   INTEGER iprint, INTEGER* maxfun, REAL w[], INTEGER iact[]);
 
 /*
- * Subroutine version designed to be callable from FORTRAN code.  Usage is
- * similar to that of the above version except that everything is passed by
- * address and that, in order to define the objective and constraint functions,
- * we require a subroutine that has the name and arguments:
+ * Subroutine variant designed to be callable from FORTRAN code.  Usage is
+ * similar to that of `cobyla` except that everything is passed by address and
+ * that, in order to define the objective and constraint functions, we require
+ * a subroutine that has the name and arguments:
  *
  *            SUBROUTINE CALCFC (N,M,X,F,CON)
  *            DIMENSION X(*),CON(*)
@@ -139,7 +139,7 @@ extern int cobyla_(INTEGER* n, INTEGER* m, REAL x[],
 #define COBYLA_BAD_ADDRESS            (-3)
 #define COBYLA_CORRUPTED              (-4)
 
-/* Opaque structure used by the reverse communication version of COBYLA. */
+/* Opaque structure used by the reverse communication variant of COBYLA. */
 typedef struct _cobyla_context cobyla_context_t;
 
 /* Allocate a new reverse communication workspace for COBYLA algorithm.  The
@@ -176,14 +176,16 @@ cobyla_create(INTEGER n, INTEGER m, REAL rhobeg, REAL rhoend,
 extern void
 cobyla_delete(cobyla_context_t* ctx);
 
-/* Perform the next iteration of the reverse communication version of the
+/* Perform the next iteration of the reverse communication variant of the
    COBYLA algorithm.  On entry, the wokspace status must be `COBYLA_ITERATE`,
    `f` and `c` are the function value and the constraints at `x`.  On exit, the
    returned value (the new wokspace status) is: `COBYLA_ITERATE` if a new trial
    point has been stored in `x` and if user is requested to compute the
    function value and the constraints on the new point; `COBYLA_SUCCESS` if
-   algorithm has converged; anything else indicate an error (see
-   `cobyla_reason` for an explanatory message). */
+   algorithm has converged and `x` has been set with the variables at the
+   solution (the corresponding function value can be retrieved with
+   `cobyla_get_last_f`); anything else indicate an error (see `cobyla_reason`
+   for an explanatory message). */
 extern int
 cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[]);
 
@@ -209,6 +211,13 @@ cobyla_get_nevals(const cobyla_context_t* ctx);
    NULL), strictly positive otherwise. */
 extern REAL
 cobyla_get_rho(const cobyla_context_t* ctx);
+
+/* Get the last function value.  Upon convergence of `cobyla_iterate`
+   (i.e. return with status `COBYLA_SUCCESS`), this value corresponds to the
+   function at the solution; otherwise, this value corresponds to the previous
+   set of variables. */
+extern REAL
+cobyla_get_last_f(const cobyla_context_t* ctx);
 
 /* Get a textual explanation of the status returned by COBYLA. */
 extern const char*
