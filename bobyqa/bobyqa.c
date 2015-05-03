@@ -1230,7 +1230,11 @@ bobyqb(const INTEGER n, const INTEGER npt,
             (long)nf, (double)f);
     print_x(OUTPUT, n, &x[1], NULL);
   }
-  xbase[1] = f;
+
+  /* Save function value at the solution and return status. */
+  if (status == BOBYQA_SUCCESS) {
+    xbase[1] = f;
+  }
   return status;
 
  too_many_evaluations:
