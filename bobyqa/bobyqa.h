@@ -92,7 +92,8 @@ typedef REAL bobyqa_objfun(const INTEGER n, const REAL* x, void* data);
    MAXFUN must be set to an upper bound on the number of calls of OBJFUN.
 
    The array W will be used for working space.  Its length must be at least
-   (NPT+5)*(NPT+N)+3*N*(N+5)/2. */
+   (NPT+5)*(NPT+N)+3*N*(N+5)/2.  Upon successful return, the first element of W
+   will be set to the function value at the solution. */
 extern int bobyqa(const INTEGER n, const INTEGER npt,
                   bobyqa_objfun* objfun, void* data,
                   REAL* x, const REAL* xl, const REAL* xu,
