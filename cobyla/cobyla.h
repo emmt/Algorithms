@@ -177,14 +177,14 @@ extern void
 cobyla_delete(cobyla_context_t* ctx);
 
 /* Perform the next iteration of the reverse communication variant of the
-   COBYLA algorithm.  On entry, the wokspace status must be `COBYLA_ITERATE`,
+   COBYLA algorithm.  On entry, the workspace status must be `COBYLA_ITERATE`,
    `f` and `c` are the function value and the constraints at `x`.  On exit, the
-   returned value (the new wokspace status) is: `COBYLA_ITERATE` if a new trial
-   point has been stored in `x` and if user is requested to compute the
+   returned value (the new workspace status) is: `COBYLA_ITERATE` if a new
+   trial point has been stored in `x` and if user is requested to compute the
    function value and the constraints on the new point; `COBYLA_SUCCESS` if
    algorithm has converged and `x` has been set with the variables at the
    solution (the corresponding function value can be retrieved with
-   `cobyla_get_last_f`); anything else indicate an error (see `cobyla_reason`
+   `cobyla_get_last_f`); anything else indicates an error (see `cobyla_reason`
    for an explanatory message). */
 extern int
 cobyla_iterate(cobyla_context_t* ctx, REAL f, REAL x[], REAL c[]);
@@ -196,7 +196,7 @@ cobyla_restart(cobyla_context_t* ctx);
 
 /* Get the current status of the algorithm.  Result is: `COBYLA_ITERATE` if
    user is requested to compute F(X) and C(X); `COBYLA_SUCCESS` if algorithm
-   has converged; anything else indicate an error (see `cobyla_reason` for an
+   has converged; anything else indicates an error (see `cobyla_reason` for an
    explanatory message). */
 extern int
 cobyla_get_status(const cobyla_context_t* ctx);

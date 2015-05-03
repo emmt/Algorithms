@@ -122,7 +122,7 @@ typedef struct _newuoa_context newuoa_context_t;
    returned address is `NULL` to indicate an error: either invalid parameters
    (external variable `errno` set to `EINVAL`), or insufficient memory
    (external variable `errno` set to `ENOMEM`).  The arguments correspond to
-   those of `newuoa` (except that the variables X are omiited because they need
+   those of `newuoa` (except that the variables X are omitted because they need
    not be specified until the first iteration with `newuoa_iterate` and that
    the workspace W is automatically allocated).
 
@@ -156,11 +156,11 @@ newuoa_create(const INTEGER n, const INTEGER npt,
 extern void newuoa_delete(newuoa_context_t* ctx);
 
 /* Perform the next iteration of the reverse communication version of the
-   NEWUOA algorithm.  On entry, the wokspace status must be `NEWUOA_ITERATE`,
+   NEWUOA algorithm.  On entry, the workspace status must be `NEWUOA_ITERATE`,
    `f` is the function value at `x`.  On exit, the returned value (the new
-   wokspace status) is: `NEWUOA_ITERATE` if a new trial point has been stored
+   workspace status) is: `NEWUOA_ITERATE` if a new trial point has been stored
    in `x` and if user is requested to compute the function value for the new
-   point; `NEWUOA_SUCCESS` if algorithm has converged; anything else indicate
+   point; `NEWUOA_SUCCESS` if algorithm has converged; anything else indicates
    an error (see `newuoa_reason` for an explanatory message). */
 extern int newuoa_iterate(newuoa_context_t* ctx, REAL f, REAL* x);
 
@@ -170,7 +170,7 @@ extern int newuoa_restart(newuoa_context_t* ctx);
 
 /* Get the current status of the algorithm.  Result is: `NEWUOA_ITERATE` if
    user is requested to compute F(X); `NEWUOA_SUCCESS` if algorithm has
-   converged; anything else indicate an error (see `newuoa_reason` for an
+   converged; anything else indicates an error (see `newuoa_reason` for an
    explanatory message). */
 extern int newuoa_get_status(const newuoa_context_t* ctx);
 
