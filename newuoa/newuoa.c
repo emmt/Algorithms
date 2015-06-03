@@ -120,14 +120,16 @@ main(int argc, char* argv[])
   return 0;
 }
 
+#ifdef FORTRAN_NAME
 int
-calfun_(const INTEGER* n, REAL* x, REAL* f)
+FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f)
 {
   *f = objfun_test(*n, x, NULL);
   return 0;
 }
+#endif /* FORTRAN_NAME */
 
-#endif
+#endif /* TESTING */
 
 void
 newuoa_test(void)
@@ -147,13 +149,13 @@ newuoa_test(void)
     rhobeg = x[0]*0.2;
     fprintf(stdout, "\n\n    Results with N =%2d and NPT =%3d\n",
             (int)n, (int)npt);
-#if 1
+#ifndef FORTRAN_NAME
     /* Test the C-code. */
     newuoa(n, npt, objfun_test, NULL, x, rhobeg, rhoend, iprint, maxfun, w);
 #else
    /* Test the FORTRAN wrapper. */
    newuoa_(&n, &npt, x, &rhobeg, &rhoend, &iprint, &maxfun, w);
-#endif
+#endif 
   }
 } /* newuoa_test */
 
@@ -282,16 +284,21 @@ newuoa(const INTEGER n, const INTEGER npt,
                 &w[ivl], &w[iw]);
 } /* newuoa */
 
+/*---------------------------------------------------------------------------*/
+/* FORTRAN SUPPORT */
+
+#ifdef FORTRAN_NAME
+
 REAL
 newuoa_calfun_wrapper(const INTEGER n, const REAL* x, void* data)
 {
   REAL f;
-  calfun_(&n, (REAL*)x, &f);
+  FORTRAN_NAME(calfun,CALFUN)(&n, (REAL*)x, &f);
   return f;
 }
 
 int
-newuoa_(const INTEGER* n, const INTEGER* npt, REAL* x,
+FORTRAN_NAME(newuoa,NEWUOA)(const INTEGER* n, const INTEGER* npt, REAL* x,
         const REAL* rhobeg, const REAL* rhoend,
         const INTEGER* iprint, const INTEGER* maxfun,
         REAL* w)
@@ -300,6 +307,8 @@ newuoa_(const INTEGER* n, const INTEGER* npt, REAL* x,
          x, *rhobeg, *rhoend, *iprint, *maxfun, w);
   return 0;
 }
+
+#endif /* FORTRAN_NAME */
 
 /*---------------------------------------------------------------------------*/
 /* REVERSE COMMUNICATION VERSION */
