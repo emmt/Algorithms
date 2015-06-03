@@ -155,7 +155,7 @@ newuoa_test(void)
 #else
    /* Test the FORTRAN wrapper. */
    newuoa_(&n, &npt, x, &rhobeg, &rhoend, &iprint, &maxfun, w);
-#endif 
+#endif
   }
 } /* newuoa_test */
 

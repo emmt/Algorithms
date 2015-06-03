@@ -195,7 +195,7 @@ extern REAL newuoa_get_rho(const newuoa_context_t* ctx);
 
      -DFORTRAN_LINKAGE=1   FORTRAN link name is the same as with the C
                            compiler.
- 
+
      -DFORTRAN_LINKAGE=2   FORTRAN link name is the function name suffixed
                            with an underscore (for instance: foo_).
 
