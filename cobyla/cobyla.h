@@ -110,25 +110,6 @@ extern int cobyla(INTEGER n, INTEGER m,
                   REAL x[], REAL rhobeg, REAL rhoend,
                   INTEGER iprint, INTEGER* maxfun, REAL w[], INTEGER iact[]);
 
-/*
- * Subroutine variant designed to be callable from FORTRAN code.  Usage is
- * similar to that of `cobyla` except that everything is passed by address and
- * that, in order to define the objective and constraint functions, we require
- * a subroutine that has the name and arguments:
- *
- *            SUBROUTINE CALCFC (N,M,X,F,CON)
- *            DIMENSION X(*),CON(*)
- *
- * The values of N and M are fixed and have been defined already, while X is
- * now the current vector of variables.  The subroutine should return the
- * objective and constraint functions at X in F and CON(1),CON(2), ...,CON(M).
- * Note that we are trying to adjust X so that F(X) is as small as possible
- * subject to the constraint functions being nonnegative.
- */
-extern int cobyla_(INTEGER* n, INTEGER* m, REAL x[],
-                   REAL* rhobeg, REAL* rhoend, INTEGER* iprint,
-                   INTEGER* maxfun, REAL w[], INTEGER iact[]);
-
 /* Possible values returned by COBYLA. */
 #define COBYLA_INITIAL_ITERATE         (2) /* only used internally */
 #define COBYLA_ITERATE                 (1) /* user requested to compute
@@ -222,6 +203,61 @@ cobyla_get_last_f(const cobyla_context_t* ctx);
 /* Get a textual explanation of the status returned by COBYLA. */
 extern const char*
 cobyla_reason(int status);
+
+/*---------------------------------------------------------------------------*/
+/* FORTRAN SUPPORT */
+
+/* Depending on your FORTRAN compiler, the names of the compiled functions
+   may have to be modified.  The various possibilities can be chosen via the
+   macro FORTRAN_LINKAGE:
+
+     -UFORTRAN_LINKAGE  (or FORTRAN_LINKAGE undefined)
+           No support for FORTRAN will be compiled.
+
+     -DFORTRAN_LINKAGE=1   FORTRAN link name is the same as with the C
+                           compiler.
+
+     -DFORTRAN_LINKAGE=2   FORTRAN link name is the function name suffixed
+                           with an underscore (for instance: foo_).
+
+     -DFORTRAN_LINKAGE=3   FORTRAN link name is the function name in upper
+                           case letters and suffixed with an underscore
+                           (for instance: FOO_).
+ */
+
+#ifdef FORTRAN_LINKAGE
+
+# if FORTRAN_LINKAGE == 1
+#   define FORTRAN_NAME(a,A) a
+# elif FORTRAN_LINKAGE == 2
+#   define FORTRAN_NAME(a,A) a##_
+# elif FORTRAN_LINKAGE == 3
+#   define FORTRAN_NAME(a,A) A##_
+# else
+#   error unsupported FORTRAN linkage
+# endif
+
+/*
+ * Subroutine variant designed to be callable from FORTRAN code.  Usage is
+ * similar to that of `cobyla` except that everything is passed by address and
+ * that, in order to define the objective and constraint functions, we require
+ * a subroutine that has the name and arguments:
+ *
+ *            SUBROUTINE CALCFC (N,M,X,F,CON)
+ *            DIMENSION X(*),CON(*)
+ *
+ * The values of N and M are fixed and have been defined already, while X is
+ * now the current vector of variables.  The subroutine should return the
+ * objective and constraint functions at X in F and CON(1),CON(2), ...,CON(M).
+ * Note that we are trying to adjust X so that F(X) is as small as possible
+ * subject to the constraint functions being nonnegative.
+ */
+extern int
+FORTRAN_NAME(cobyla,COBYLA)(INTEGER* n, INTEGER* m, REAL x[],
+                            REAL* rhobeg, REAL* rhoend, INTEGER* iprint,
+                            INTEGER* maxfun, REAL w[], INTEGER iact[]);
+
+#endif /* FORTRAN_LINKAGE */
 
 #ifdef __cplusplus
 }

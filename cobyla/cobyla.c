@@ -137,28 +137,34 @@ cobyla(INTEGER n, INTEGER m, cobyla_calcfc* calcfc, void* calcfc_data,
 }
 
 /*---------------------------------------------------------------------------*/
-/* Version callable from FORTRAN */
+/* FORTRAN support. */
+
+#ifdef FORTRAN_NAME
 
 /* CALCFC_WRAPPER is a wrapper function, it assumes a CALCFC subroutine written
    in FORTRAN. */
 static REAL calcfc_wrapper(INTEGER n, INTEGER m, const REAL x[],
                            REAL con[], void* data)
 {
+# define fc FORTRAN_NAME(calcfc,CALCFC)
   REAL f;
-  extern void calcfc_(INTEGER* n, INTEGER* m, const REAL x[],
-                      REAL* f, REAL con[]);
-  calcfc_(&n, &m, x, &f, con);
+  extern void fc(INTEGER* n, INTEGER* m, const REAL x[], REAL* f, REAL con[]);
+  fc(&n, &m, x, &f, con);
   return f;
+# undef fc
 }
 
-int cobyla_(INTEGER* n, INTEGER* m, REAL x[], REAL* rhobeg,
-            REAL* rhoend, INTEGER* iprint, INTEGER* maxfun,
-            REAL w[], INTEGER iact[])
+int
+FORTRAN_NAME(cobyla,COBYLA)(INTEGER* n, INTEGER* m, REAL x[], REAL* rhobeg,
+                            REAL* rhoend, INTEGER* iprint, INTEGER* maxfun,
+                            REAL w[], INTEGER iact[])
 {
   (void)cobyla(*n, *m, calcfc_wrapper, NULL, x, *rhobeg, *rhoend,
                *iprint, maxfun, w, iact);
   return 0;
 }
+
+#endif /* FORTRAN_NAME */
 
 /*---------------------------------------------------------------------------*/
 /* Reverse communication version. */
