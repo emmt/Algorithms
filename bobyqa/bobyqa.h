@@ -128,12 +128,37 @@ extern int bobyqa(const INTEGER n, const INTEGER npt,
 extern void bobyqa_test(void);
 
 /*---------------------------------------------------------------------------*/
-/* FORTRAN WRAPPER */
+/* FORTRAN SUPPORT */
 
-/* Remark: Depending on your FORTRAN compiler, you may have to change the
-           names of the compiled functions (it is assumed below that the
-           link name is the name of the FORTRAN subroutine converted to
-           lower case letters and with an underscore appended). */
+/* Depending on your FORTRAN compiler, the names of the compiled functions
+   may have to be modified.  The various possibilities can be chosen via the
+   macro FORTRAN_LINKAGE:
+
+     -UFORTRAN_LINKAGE  (or FORTRAN_LINKAGE undefined)
+           No support for FORTRAN will be compiled.
+
+     -DFORTRAN_LINKAGE=1   FORTRAN link name is the same as with the C
+                           compiler.
+
+     -DFORTRAN_LINKAGE=2   FORTRAN link name is the function name suffixed
+                           with an underscore (for instance: foo_).
+
+     -DFORTRAN_LINKAGE=3   FORTRAN link name is the function name in upper
+                           case letters and suffixed with an underscore
+                           (for instance: FOO_).
+ */
+
+#ifdef FORTRAN_LINKAGE
+
+# if FORTRAN_LINKAGE == 1
+#   define FORTRAN_NAME(a,A) a
+# elif FORTRAN_LINKAGE == 2
+#   define FORTRAN_NAME(a,A) a##_
+# elif FORTRAN_LINKAGE == 3
+#   define FORTRAN_NAME(a,A) A##_
+# else
+#   error unsupported FORTRAN linkage
+# endif
 
 /* This subroutine is a version of BOBYQA that is callable from FORTRAN code.
    The main difference with the C version is that the objective function
@@ -144,19 +169,18 @@ extern void bobyqa_test(void);
    variables X(1),X(2),...,X(N), which are generated automatically in a way
    that satisfies the bounds given in XL and XU.
 */
-extern int bobyqa_(const INTEGER* n, const INTEGER* npt,
-                   REAL* x, const REAL* xl, const REAL* xu,
-                   const REAL* rhobeg, const REAL* rhoend,
-                   const INTEGER* iprint, const INTEGER* maxfun,
-                   REAL* w);
-
-/* Wrapper function to emulate `newuoa_objfun` objective function calling the
-   user-defined `calfun_` subroutine. */
-extern REAL bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data);
+extern int
+FORTRAN_NAME(bobyqa,BOBYQA)(const INTEGER* n, const INTEGER* npt,
+                            REAL* x, const REAL* xl, const REAL* xu,
+                            const REAL* rhobeg, const REAL* rhoend,
+                            const INTEGER* iprint, const INTEGER* maxfun,
+                            REAL* w);
 
 /* Subroutine that must be defined by the application to use the FORTRAN
    wrapper to BOBYQA. */
-extern int calfun_(const INTEGER* n, REAL* x, REAL* f);
+extern int FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f);
+
+#endif /* FORTRAN_LINKAGE */
 
 #ifdef __cplusplus
 }

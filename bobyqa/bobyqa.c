@@ -162,12 +162,13 @@ main(int argc, char* argv[])
   return 0;
 }
 
-int
-calfun_(const INTEGER* n, REAL* x, REAL* f)
+#ifdef FORTRAN_NAME
+int FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f)
 {
   *f = objfun_test(*n, x, NULL);
   return 0;
 }
+#endif /* FORTRAN_NAME */
 
 #endif
 
@@ -339,25 +340,32 @@ bobyqa(const INTEGER n, const INTEGER npt,
                 &w[id], &w[ivl], &w[iw]);
 } /* bobyqa */
 
-REAL
-bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data)
+/*---------------------------------------------------------------------------*/
+/* FORTRAN SUPPORT */
+
+#ifdef FORTRAN_NAME
+
+static REAL
+calfun_wrapper(const INTEGER n, const REAL* x, void* data)
 {
   REAL f;
-  calfun_(&n, (REAL*)x, &f);
+  FORTRAN_NAME(calfun,CALFUN)(&n, (REAL*)x, &f);
   return f;
 }
 
 int
-bobyqa_(const INTEGER* n, const INTEGER* npt,
-        REAL* x, const REAL* xl, const REAL* xu,
-        const REAL* rhobeg, const REAL* rhoend,
-        const INTEGER* iprint, const INTEGER* maxfun,
-        REAL* w)
+FORTRAN_NAME(bobyqa,BOBYQA)(const INTEGER* n, const INTEGER* npt,
+                            REAL* x, const REAL* xl, const REAL* xu,
+                            const REAL* rhobeg, const REAL* rhoend,
+                            const INTEGER* iprint, const INTEGER* maxfun,
+                            REAL* w)
 {
-  bobyqa(*n, *npt, bobyqa_calfun_wrapper, NULL, x, xl, xu,
+  bobyqa(*n, *npt, calfun_wrapper, NULL, x, xl, xu,
          *rhobeg, *rhoend, *iprint, *maxfun, w);
   return 0;
 }
+
+#endif /* FORTRAN_NAME */
 
 /*---------------------------------------------------------------------------*/
 /* BOBYQA SUBROUTINES */
