@@ -68,7 +68,7 @@ implements arbitrary inequality constraints).
 ## L-BFGS-B
 
 Directory [`ylbfgsb`](./ylbfgsb) contains original code of L-BFGS-B (for
-*Limited memory BFGS method width Bounds*) algorithm (version 3.0) by R.
+*Limited memory BFGS method with Bounds*) algorithm (version 3.0) by R.
 H. Byrd, P. Lu, J.  Nocedal and C. Zhu (see ref. [1] and [2]), simple C and
 Yorick wrapper code to use L-BFGS-B in these languages.
 
