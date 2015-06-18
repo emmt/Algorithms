@@ -64,3 +64,21 @@ model is `2*N+1`.  For smooth objective functions, BOBYQA is expected to be
 more efficient than COBYLA (which exploits a more simple linear model but
 implements arbitrary inequality constraints).
 
+
+## L-BFGS-B
+
+Directory [`ylbfgsb`](./ylbfgsb) contains original code of L-BFGS-B (for
+*Limited memory BFGS method width Bounds*) algorithm (version 3.0) by R.
+H. Byrd, P. Lu, J.  Nocedal and C. Zhu (see ref. [1] and [2]), simple C and
+Yorick wrapper code to use L-BFGS-B in these languages.
+
+The L-BFGS-B algorithm is described in:
+
+1. R. H. Byrd, P. Lu, J. Nocedal and C. Zhu, *A limited memory algorithm
+   for bound constrained optimization*, SIAM J. Scientific Computing 16
+   (1995), no. 5, pp. 1190--1208.
+
+2. C.  Zhu, R.H. Byrd, P. Lu, J.  Nocedal, *L-BFGS-B: a limited memory
+   FORTRAN code for solving bound constrained optimization problems*,
+   Tech. Report, NAM-11, EECS Department, Northwestern University, 1994.
+
