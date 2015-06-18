@@ -67,10 +67,15 @@ implements arbitrary inequality constraints).
 
 ## L-BFGS-B
 
-Directory [`ylbfgsb`](./ylbfgsb) contains original code of L-BFGS-B (for
-*Limited memory BFGS method with Bounds*) algorithm (version 3.0) by R.
-H. Byrd, P. Lu, J.  Nocedal and C. Zhu (see ref. [1] and [2]), simple C and
-Yorick wrapper code to use L-BFGS-B in these languages.
+L-BFGS-B (for *Limited memory BFGS method with Bounds*) is an algorithm by 
+R.H. Byrd, P. Lu, J. Nocedal and C. Zhu (see references below) to minimize
+a smooth function of many variables with simple bound constraints.  The
+method requires the computation of the function and its gradient.  It exploits
+a limited memory approximation of the function Hessian with BFGS updates.
+It may be used to solve large scale problems.
+
+Directory [`ylbfgsb`](./ylbfgsb) contains original code of L-BFGS-B with
+simple C and Yorick wrapper code to use L-BFGS-B in these languages.
 
 The L-BFGS-B algorithm is described in:
 
