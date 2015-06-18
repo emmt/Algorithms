@@ -237,6 +237,190 @@ LBFGSB_CONVERGENCE = 3n;
 LBFGSB_WARNING     = 4n;
 LBFGSB_ERROR       = 5n;
 
+func lbfgsb_solve(fg, x, inf=, sup=, bnd=, mem=,
+                  factr=, pgtol=, maxeval=, maxiter=,
+                  verb=, output=, printer=, save_best=)
+/* DOCUMENT x = lbfgsb_solve(fg, x0);
+
+     Solve an optimization problem with L-BFGS-B algorithm.  FG is a Yorick
+     function which computes the penalty to minimize and its gradient.  X0
+     gives the initial variables to start with.
+
+     The function FG must be defined as:
+
+         func fg(x, &gx) {
+            fx = f(x);  // compute penalty function at x
+            gx = g(x);  // compute gradient of penalty function at x
+            return fx;  // return penalty
+         }
+
+     Of course FG can also be any Yorick object callable as a function
+     (e.g., a closure) and behaving like the function above.
+
+     The initial variables X0 are needed to figure out the size of the
+     problem and allocate ressources.  If they are not feasible, they will
+     be projected into the feasble set.
+
+     Keywords INF, SUP and BND can be used to specify the inferior bounds,
+     the superior bounds on the variables and the types of the bounds.  See
+     lbfgsb_setup for more details.
+
+     Keyword MEM set the maximum number of variable metric corrections used
+     to define the limited memory approximation of the Hessian matrix.  The
+     default is to use at most 5 corrections.
+
+     Keywords FACTR and PGTOL can be used to specify the convergence
+     criterion.  See lbfgsb_setup for more details.
+
+     Keywords MAXEVAL and MAXITER can be used to sepcify the maximum number
+     of function evaluations and the maximum number of iterations.
+     Negative values are the same as setting no limits which is the
+     default.  Unless keyword SAVE_BEST is set true, the actual maximum
+     number of function valuations may be slightly lager than MAXEVAL
+     because the function only returns after a finite number of iterations
+     (and there may be more than one evaluations per iteration).
+
+     Keyword VERB specify the level of verbosity.  It can be set with an
+     integer number to specify that every VERB iterations some informations
+     about the current iteration should be printed.  If VERB is non-zero,
+     informations about the very first and very last iteration are always
+     printed (even if not a multiple of VERB).  By default, nothing is
+     printed (except error or warning messages).  Keyword OUTPUT can be set
+     with a text stream or a file name to which print the iterations
+     information.
+
+     Keyword PRINTER can be set with a function (or an object calable as a
+     function) to be called after every iteration as:
+
+         printer, ws, x, fx, gx, iter, eval, t;
+
+     where WS is the L-BFGS-B workspace, X are the current variables, FX
+     the corresponding function value, GX the corresponding gradient, ITER
+     the number of iterations, EVAL the number of function evaluations and
+     T the elasped time in seconds (as an array of 3 values as returned by
+     the timer function).
+
+     Keyword SAVE_BEST can be set true to save the best solution so far in
+     external variables: `lbfgsb_best_x` for the solution, `lbfgsb_best_fx`
+     for the corresponding function value and `lbfgsb_best_gx` for the
+     corresponding gradient.  Typical usage is:
+
+         local lbfgsb_best_x, lbfgsb_best_fx, lbfgsb_best_gx;
+         x = lbfgsb_solve(fg, x, ...);
+         fx = lbfgsb_best_fx;
+
+     If keyword SAVE_BEST is set true, the returned value is always the
+     best solution found so far and, if keyword MAXEVAL is set with a
+     nonnegative value, at most MAXEVAL+1 function evaluations will be
+     performed.
+
+
+   SEE ALSO: lbfgsb_setup, timer, closure.
+ */
+{
+  /* Extern variables to save best solution so far. */
+  extern lbfgsb_best_x, lbfgsb_best_fx, lbfgsb_best_gx;
+
+  /* Default options. */
+  if (is_void(mem)) mem = 5;
+  if (is_void(maxiter)) maxiter = -1;
+  if (is_void(maxeval)) maxeval = -1;
+
+  /* Create optimization workspace. */
+  ws = lbfgsb_setup(mem, x, inf=inf, sup=sup, bnd=bnd, factr=factr, pgtol=pgtol);
+  job = LBFGSB_FG;
+
+  stat,x;
+
+  /* Some constants. */
+  true = 1n;
+  false = 0n;
+
+  /* Optimization loop. */
+  eval = 0;
+  iter = 0;
+  t = array(double, 3);
+  timer, t;
+  t0 = t;
+  finish = false;
+  msg = string(0);
+  for (;;) {
+    local fx, gx;
+
+    if (job == LBFGSB_FG) {
+      /* Compute function and gradient. */
+      fx = fg(x, gx);
+      ++eval;
+      if (save_best && (eval == 1 || fx < lbfgsb_best_fx)) {
+        /* Save best solution so far. */
+        lbfgsb_best_x = x;
+        lbfgsb_best_fx = fx;
+        lbfgsb_best_gx = gx;
+      }
+      if (save_best && maxeval >= 0 && eval > maxeval) {
+        msg = swrite(format="WARNING: too many function evaluations (%d)",
+                     eval);
+        finish = true;
+      }
+    } else if (job == LBFGSB_NEW_X || job == LBFGSB_CONVERGENCE) {
+      ++iter;
+      finish = (job == LBFGSB_CONVERGENCE);
+      if (! finish && maxiter >= 0 && iter >= maxiter) {
+        msg = swrite(format="WARNING: too many iterations (%d)", iter);
+        finish = true;
+      }
+      if (! finish && maxeval >= 0 && eval >= maxeval) {
+        msg = swrite(format="WARNING: too many function evaluations (%d)",
+                     eval);
+        finish = true;
+      }
+    } else if (job == LBFGSB_WARNING) {
+      msg = ("WARNING: " + lbfgsb_message(ws));
+      finish = true;
+    } else if (job == LBFGSB_ERROR) {
+      msg = ("ERROR: " + lbfgsb_message(ws));
+      break;
+    } else {
+      error, "unexpected job";
+    }
+
+    if (finish || job == LBFGSB_NEW_X || eval == 1) {
+      timer, t;
+      if (! is_void(printer)) {
+        printer, ws, x, fx, gx, iter, eval, t - t0;
+      }
+      if (verb && (finish || (iter%verb) == 0)) {
+        if (eval == 1) {
+          if (is_void(output)) {
+            prefix = " ";
+          } else {
+            if (structof(output) == string) {
+              output = open(output, "a");
+            } else if (typeof(output) != "text_stream") {
+              error, "bad value for keyword OUTPUT";
+            }
+            prefix = "#";
+          }
+          write, output, format="%s%s\n%s%s\n", prefix,
+            " ITER     EVAL   TIME (s)            PENALTY           GRADIENT",
+            prefix,
+            "-----------------------------------------------------------------";
+        }
+        write, output, format=" %6d  %6d  %9.3f  %24.16e  %12.6e\n",
+          iter, eval, (t(3) - t0(3)), fx, sqrt(avg(gx*gx));
+      }
+      if (finish) {
+        if (msg) write, format="%s\n", msg;
+        break;
+      }
+    }
+
+    /* Call optimizer. */
+    job = lbfgsb_iterate(ws, x, fx, gx);
+  }
+  return (save_best ? lbfgsb_best_x : x);
+}
+
 /*
  * Local Variables:
  * mode: Yorick
