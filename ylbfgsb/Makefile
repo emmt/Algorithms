@@ -58,7 +58,7 @@ PKG_I_EXTRA=
 # We prefix all function/subroutine names with 'lb' to avoid conflicts
 # (note that the suffix must be changed to avoid circular dependency).
 %.for: ${srcdir}/lbfgsb-3.0/%.f
-	tr '[A-Z]' '[a-z]' <$< | sed -r >$@ \
+	sed -r <$< >$@ \
 	    -e 's/(call|subroutine) +d(axpy|copy|scal|pofa|trsl)/\1 lb\2/g' \
 	    -e 's/(^|[^a-z0-9_])d(dot|nrm2)([^a-z0-9_]|$$)/\1lb\2\3/g' \
 	    -e 's/(call|subroutine) +(setu|main|cmpr|errc|hpso|lnsr|prn[123]|)lb/\1 lb\2/g' \
