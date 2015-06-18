@@ -23,8 +23,8 @@ Note that the build process renames all FORTRAN functions and subroutines
 to be prefixed by `lb` to avoid conflicts.
 
 
-Installation of Yorick plugin
------------------------------
+Installation of the Yorick plugin
+---------------------------------
 
 In short, building and installing the Yorick plug-in can be as quick as:
 ```
