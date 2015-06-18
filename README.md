@@ -67,7 +67,7 @@ implements arbitrary inequality constraints).
 
 ## L-BFGS-B
 
-L-BFGS-B (for *Limited memory BFGS method with Bounds*) is an algorithm by 
+L-BFGS-B (for *Limited memory BFGS method with Bounds*) is an algorithm by
 R.H. Byrd, P. Lu, J. Nocedal and C. Zhu (see references below) to minimize
 a smooth function of many variables with simple bound constraints.  The
 method requires the computation of the function and its gradient.  It exploits
@@ -79,11 +79,11 @@ simple C and Yorick wrapper code to use L-BFGS-B in these languages.
 
 The L-BFGS-B algorithm is described in:
 
-1. R. H. Byrd, P. Lu, J. Nocedal and C. Zhu, *A limited memory algorithm
-   for bound constrained optimization*, SIAM J. Scientific Computing 16
-   (1995), no. 5, pp. 1190--1208.
+1. R.H. Byrd, P. Lu, J. Nocedal and C. Zhu, *A limited memory algorithm for
+   bound constrained optimization*, SIAM J. Scientific Computing 16 (1995),
+   no. 5, pp. 1190--1208.
 
-2. C.  Zhu, R.H. Byrd, P. Lu, J.  Nocedal, *L-BFGS-B: a limited memory
+2. C. Zhu, R.H. Byrd, P. Lu, J. Nocedal, *L-BFGS-B: a limited memory
    FORTRAN code for solving bound constrained optimization problems*,
    Tech. Report, NAM-11, EECS Department, Northwestern University, 1994.
 
