@@ -1,5 +1,6 @@
-# Work in progress.
-work
+# Work in progress and build directories.
+work/
+build/
 
 # Emacs backup files
 *~
