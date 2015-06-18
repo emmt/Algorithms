@@ -1,4 +1,5 @@
 *.[hc]    filter=cleanup-code
+*.pdf     binary
 *.md      filter=cleanup-text
 README    filter=cleanup-text
 TODO      filter=cleanup-text
