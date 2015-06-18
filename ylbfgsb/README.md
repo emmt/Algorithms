@@ -10,8 +10,21 @@ and [2]).  This code can be downloaded at
 http://users.iems.northwestern.edu/~nocedal/lbfgsb.html
 
 
-Installation
-------------
+Usage in C
+----------
+
+In addition to the FORTRAN code in directory [lbfgsb-3.0](./lbfgsb-3.0),
+files [`lbfgsb.h`](./lbfgsb.h) and [`lbfgsb-wrap.c`](./lbfgsb-wrap.c) are
+all you need.  You may have to edit the basic types defined at the
+beginning of [`lbfgsb.h`](./lbfgsb.h) to match the settings of your FORTRAN
+compiler.
+
+Note that the build process renames all FORTRAN functions and subroutines
+to be prefixed by `lb` to avoid conflicts.
+
+
+Installation of Yorick plugin
+-----------------------------
 
 In short, building and installing the Yorick plug-in can be as quick as:
 ```
@@ -24,7 +37,7 @@ where `BUILD_DIR` is the build directory (at your convenience) and `SRC_DIR` is
 the source directory of the plug-in code.  The build and source directories
 can be the same in which case, call `./configure` to configure for building.
 
-Then, to use the plug-in, start the Yorick interpreter and type:
+To use the plug-in, start the Yorick interpreter and type:
 ```
     #include "lbfgsb.i"
         help, lbfgsb_setup
@@ -38,8 +51,8 @@ More detailled explanations are given below.
 
 2. Configure for compilation.  The are two possibilities:
 
-   * For an in-place build, go to the source directory of the plug-in code
-     and run the configuration script:
+   * For an **in-place build**, go to the source directory of the plug-in
+     code and run the configuration script:
      ```
          cd SRC_DIR
          ./configure
@@ -49,9 +62,9 @@ More detailled explanations are given below.
          ./configure --help
      ```
 
-   * To compile in a different build directory, say `BUILD_DIR`, create the
-     build directory, go to the build directory, and run the configuration
-     script:
+   * To compile in a **different build directory**, say `BUILD_DIR`, create
+     the build directory, go to the build directory, and run the
+     configuration script:
      ```
          mkdir -p BUILD_DIR
          cd BUILD_DIR
