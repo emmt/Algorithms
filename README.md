@@ -74,7 +74,7 @@ method requires the computation of the function and its gradient.  It exploits
 a limited memory approximation of the function Hessian with BFGS updates.
 It may be used to solve large scale problems.
 
-Directory [`ylbfgsb`](./ylbfgsb) contains original code of L-BFGS-B with
+Directory [`lbfgsb`](./lbfgsb) contains original code of L-BFGS-B with
 simple C and Yorick wrapper code to use L-BFGS-B in these languages.
 
 The L-BFGS-B algorithm is described in:
