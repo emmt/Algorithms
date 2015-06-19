@@ -330,8 +330,6 @@ func lbfgsb_solve(fg, x, inf=, sup=, bnd=, mem=,
   ws = lbfgsb_setup(mem, x, inf=inf, sup=sup, bnd=bnd, factr=factr, pgtol=pgtol);
   job = LBFGSB_FG;
 
-  stat,x;
-
   /* Some constants. */
   true = 1n;
   false = 0n;
