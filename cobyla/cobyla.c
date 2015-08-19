@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
+
 #include "cobyla.h"
 
 /* Macros to deal with single/double precision. */
@@ -143,8 +144,8 @@ cobyla(INTEGER n, INTEGER m, cobyla_calcfc* calcfc, void* calcfc_data,
 
 /* CALCFC_WRAPPER is a wrapper function, it assumes a CALCFC subroutine written
    in FORTRAN. */
-static REAL calcfc_wrapper(INTEGER n, INTEGER m, const REAL x[],
-                           REAL con[], void* data)
+static REAL
+calcfc_wrapper(INTEGER n, INTEGER m, const REAL x[], REAL con[], void* data)
 {
 # define fc FORTRAN_NAME(calcfc,CALCFC)
   REAL f;
