@@ -163,7 +163,8 @@ main(int argc, char* argv[])
 }
 
 #ifdef FORTRAN_NAME
-int FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f)
+int
+FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f)
 {
   *f = objfun_test(*n, x, NULL);
   return 0;
@@ -345,8 +346,8 @@ bobyqa(const INTEGER n, const INTEGER npt,
 
 #ifdef FORTRAN_NAME
 
-static REAL
-calfun_wrapper(const INTEGER n, const REAL* x, void* data)
+REAL
+bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data)
 {
   REAL f;
   FORTRAN_NAME(calfun,CALFUN)(&n, (REAL*)x, &f);
@@ -360,7 +361,7 @@ FORTRAN_NAME(bobyqa,BOBYQA)(const INTEGER* n, const INTEGER* npt,
                             const INTEGER* iprint, const INTEGER* maxfun,
                             REAL* w)
 {
-  bobyqa(*n, *npt, calfun_wrapper, NULL, x, xl, xu,
+  bobyqa(*n, *npt, bobyqa_calfun_wrapper, NULL, x, xl, xu,
          *rhobeg, *rhoend, *iprint, *maxfun, w);
   return 0;
 }
