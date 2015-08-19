@@ -472,13 +472,14 @@ bobyqb(const INTEGER n, const INTEGER npt,
 #define BMAT(a1,a2) bmat[(a2)*ndim + a1]
 #define ZMAT(a1,a2) zmat[(a2)*npt + a1]
 
-  /* FIXME: Set uninitialized variables. */
+  /* Set uninitialized variables to avoid compiler warnings. */
   adelt = zero;
   alpha = zero;
   cauchy = zero;
   denom = zero;
   diff = zero;
   diffc = zero;
+  f = zero;
   knew = 0;
 
   /* Set some constants. */
