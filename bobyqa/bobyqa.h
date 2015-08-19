@@ -137,21 +137,28 @@ extern void bobyqa_test(void);
      -UFORTRAN_LINKAGE  (or FORTRAN_LINKAGE undefined)
            No support for FORTRAN will be compiled.
 
-     -DFORTRAN_LINKAGE=1   FORTRAN link name is the same as with the C
+     -DFORTRAN_LINKAGE=0   FORTRAN link name is the same as with the C
                            compiler.
 
+     -DFORTRAN_LINKAGE=1   FORTRAN link name is is the function name in upper
+                           case letters (for instance, `foo` yields `FOO`).
+
      -DFORTRAN_LINKAGE=2   FORTRAN link name is the function name suffixed
-                           with an underscore (for instance: foo_).
+                           with an underscore (for instance, `foo` yields
+                           `foo_`).
 
      -DFORTRAN_LINKAGE=3   FORTRAN link name is the function name in upper
                            case letters and suffixed with an underscore
-                           (for instance: FOO_).
+                           (for instance, `foo` yields `FOO_`).
  */
 
 #ifdef FORTRAN_LINKAGE
 
-# if FORTRAN_LINKAGE == 1
+# if FORTRAN_LINKAGE == 0
 #   define FORTRAN_NAME(a,A) a
+#   error names will clash
+# elif FORTRAN_LINKAGE == 1
+#   define FORTRAN_NAME(a,A) A
 # elif FORTRAN_LINKAGE == 2
 #   define FORTRAN_NAME(a,A) a##_
 # elif FORTRAN_LINKAGE == 3
