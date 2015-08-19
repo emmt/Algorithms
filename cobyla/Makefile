@@ -41,6 +41,7 @@ clean:
 	rm -f ${NAME}-fwrap-double ${NAME}-fwrap-single
 	rm -f ${NAME}-revcom-double ${NAME}-revcom-single
 
+test: test-simple test-revcom
 
 # Rule to produce output of tests.
 %.out: %
@@ -87,7 +88,7 @@ ${NAME}-double: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
 ${NAME}-single: ${srcdir}/${NAME}.c ${srcdir}/${NAME}.h
 	${CC} ${CFLAGS} ${SINGLE} -DTESTING $< -o $@ -lm
 
-test: test-double test-single
+test-simple: test-double test-single
 
 test-double: ${NAME}-double.out ${NAME}-orig-double.out
 	@if diff $^ >${NAME}-double.diff; then \
