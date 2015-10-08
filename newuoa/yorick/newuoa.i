@@ -20,11 +20,12 @@ extern newuoa_iterate;
          or status = newuoa_iterate(ctx, f, x, c);
 
      The function `newuoa_create` makes a new instance for Mike Powell's NEWUOA
-     algorithm for  minimizing a function  of many variables.  The  method is
-     "derivatives free" (only the function  values are needed).
+     algorithm for minimizing a function of many variables.  The method is
+     "derivatives free" (only the function values are needed).
 
      N is the number of variables, NPT is the number of interpolation
-     conditions. Its value must be in the interval [N+2,(N+1)(N+2)/2].
+     conditions. Its value must be in the interval [N+2,(N+1)(N+2)/2].  The
+     ecommended number of points for building the quadratic model is NPT=2*N+1.
 
      RHOBEG and RHOEND are the initial and final values of a trust region
      radius, so both must be positive with RHOEND <= RHOBEG.  Typically RHOBEG
@@ -36,7 +37,7 @@ extern newuoa_iterate;
      amount of printing. Specifically, there is no output if IPRINT=0 and there
      is output only at the return if IPRINT=1. Otherwise, each new value of RHO
      is printed, with the best vector of variables so far and the corresponding
-     value of the objective function. Further, each new value of F with its
+     value of the objective function.  Further, each new value of F with its
      variables are output if IPRINT=3.
 
      MAXFUN must be set to an upper bound on the number of objective function
@@ -66,12 +67,13 @@ extern newuoa_iterate;
          ctx.rho     radius of the trust region
          ctx.status  current status
          ctx.nevals  number of function evaluations so far
+         ctx.reason  textual description of current status
 
 
    REFERENCES
      The NEWUOA algorithm is described in:
 
-         M.J.D. Powell, "The NEWUOA software for unconstrained minimization
+         M.J.D.  Powell, "The NEWUOA software for unconstrained minimization
          without derivatives", in Large-Scale Nonlinear Optimization, editors
          G. Di Pillo and M. Roma, Springer (2006), pages 255-297.
 
