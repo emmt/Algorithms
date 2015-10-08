@@ -124,7 +124,8 @@ typedef struct _newuoa_context newuoa_context_t;
    (external variable `errno` set to `ENOMEM`).  The arguments correspond to
    those of `newuoa` (except that the variables X are omitted because they need
    not be specified until the first iteration with `newuoa_iterate` and that
-   the workspace W is automatically allocated).
+   the workspace W is automatically allocated).  The initial status of the
+   created workspace is guaranteed to be `NEWUOA_ITERATE`.
 
    When no longer needed, the workspace must be deleted with `newuoa_delete`.
 
