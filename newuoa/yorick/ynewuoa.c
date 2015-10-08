@@ -60,21 +60,27 @@ static void ynewuoa_extract(void* addr, char* attr)
         return;
       }
     } else if (c == 'n') {
-      if (attr[1] == '\0') {
+      c = attr[1];
+      if (c == '\0') {
         ypush_long(obj->n);
         return;
       }
-      if (strcmp(attr, "npt") == 0) {
+      if (c == 'p' && strcmp(attr, "npt") == 0) {
         ypush_long(obj->npt);
         return;
       }
-      if (strcmp(attr, "nevals") == 0) {
+      if (c == 'e' && strcmp(attr, "nevals") == 0) {
         ypush_long(newuoa_get_nevals(obj->ctx));
         return;
       }
     } else if (c == 'r') {
-      if (strcmp(attr, "rho") == 0) {
+      c = attr[1];
+      if (c == 'h' && strcmp(attr, "rho") == 0) {
         ypush_double(newuoa_get_rho(obj->ctx));
+        return;
+      }
+      if (c == 'e' && strcmp(attr, "reason") == 0) {
+        push_string(newuoa_reason(newuoa_get_status(obj->ctx)));
         return;
       }
     }
