@@ -11,6 +11,122 @@
 
 if (is_func(plug_in)) plug_in, "ynewuoa";
 
+local newuoa_maximize;
+func newuoa_minimize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+/* DOCUMENT xmin = newuoa_minimize(f, x0, rhobeg, rhoend);
+         or  obj = newuoa_minimize(f, x0, rhobeg, rhoend, all=1);
+         or xmax = newuoa_maximize(f, x0, rhobeg, rhoend);
+         or  obj = newuoa_maximize(f, x0, rhobeg, rhoend, all=1);
+
+     Minimize or maximize the multi-variate function F starting at the initial
+     point X0.  RHOBEG and RHOEND are the initial and final values of the trust
+     region radius (0 < RHOEND <= RHOBEG).
+
+     Note that the proper scaling of the variables is important for the success
+     of the algorithm.  RHOBEG should be set to the typical size of the region
+     to explorate and RHOEND should be set to the typical precision.
+
+     Keyword NPT sets the number of of interpolation conditions.  Its default
+     value is equal to 2*N+1 (the recommended value).
+
+     Keyword MAXFUN sets the maximum number of function evaluations.  Its
+     default value is equal to 30*N.
+
+     If keyword ALL is true, the result is a structured object.  For
+     `newuoa_minimize`, the members of the returned object are:
+
+        obj.fmin   = minimal function value found
+        obj.xmin   = corresponding parameters
+        obj.nevals = number of function evaluations
+        obj.status = status of the algorithm upon return
+        obj.rho    = final radius of the trust region
+
+     For `newuoa_maximize`, the two first members are:
+
+        obj.fmax   = minimal function value found
+        obj.xmax   = corresponding parameters
+
+     Keyword ERR sets the behavior in case of abnormal termination.  If ERR=0,
+     anything but a success throws an error (this is also the default
+     behavior); if ERR > 0, non-fatal errors are reported by a warning message;
+     if ERR < 0, non-fatal errors are silently ignored.
+
+     Keyword VERB set the verbosity level.
+
+
+   SEE ALSO: newuoa_create, newuoa_error.
+ */
+{
+  x = double(unref(x0));
+  n = numberof(x);
+  ctx = newuoa_create(n, (is_void(npt) ? 2*n + 1 : npt), rhobeg, rhoend,
+                      (is_void(verb) ? 0 : verb),
+                      (is_void(maxfun) ? 30*n : maxfun));
+  fmin = [];
+  do {
+    fx = f(x);
+    if (is_void(fmin) || fmin > fx) {
+      fmin = fx;
+      xmin = x;
+    }
+    status = newuoa_iterate(ctx, fx, x);
+  } while (status == NEWUOA_ITERATE);
+  if (status != NEWUOA_SUCCESS) newuoa_error, status, err;
+  return (all ? save(fmin, xmin, nevals = ctx.nevals,
+                     status, rho = ctx.rho) : x);
+}
+
+func newuoa_maximize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+{
+  x = double(unref(x0));
+  n = numberof(x);
+  ctx = newuoa_create(n, (is_void(npt) ? 2*n + 1 : npt), rhobeg, rhoend,
+                      (is_void(verb) ? 0 : verb),
+                      (is_void(maxfun) ? 30*n : maxfun));
+  fmax = [];
+  do {
+    fx = f(x);
+    if (is_void(fmax) || fmax < fx) {
+      fmax = fx;
+      xmax = x;
+    }
+    status = newuoa_iterate(ctx, -fx, x);
+  } while (status == NEWUOA_ITERATE);
+  if (status != NEWUOA_SUCCESS) newuoa_error, status, err;
+  return (all ? save(fmax, xmax, nevals = ctx.nevals,
+                     status, rho = ctx.rho) : x);
+}
+
+func newuoa_error(status, errmode)
+/* DOCUMENT newuoa_error, status;
+         or newuoa_error, status, errmode;
+
+     Report an error in NEWUOA according to the value of STATUS.  Nothing is
+     done if STATUS is NEWUOA_SUCCESS; otherwise, the optional argument ERRMODE
+     determines the behavior.  If ERRMODE = 0, the routine throws an error
+     (this is also the default behavior); if ERRMODE > 0, non-fatal errors are
+     reported by a warning message; if ERRMODE < 0, non-fatal errors are
+     silently ignored.
+
+   SEE ALSO: newuoa_reason, error.
+ */
+{
+  if (status != NEWUOA_SUCCESS) {
+    if (errmode && (status == NEWUOA_ROUNDING_ERRORS ||
+                    status == NEWUOA_TOO_MANY_EVALUATIONS ||
+                    status == NEWUOA_STEP_FAILED)) {
+      if (errmode > 0) {
+        write, format="WARNING: Something wrong occured in NEWUOA: %s",
+          newuoa_reason(status);
+      }
+    } else {
+      error, swrite(format="Something wrong occured in NEWUOA: %s",
+                    newuoa_reason(status));
+    }
+  }
+}
+errs2caller, newuoa_error;
+
 local NEWUOA_ITERATE, NEWUOA_SUCCESS, NEWUOA_BAD_NPT, NEWUOA_ROUNDING_ERRORS;
 local NEWUOA_TOO_MANY_EVALUATIONS, NEWUOA_STEP_FAILED, NEWUOA_BAD_ADDRESS;
 local NEWUOA_CORRUPTED;
