@@ -11,8 +11,7 @@
 
 if (is_func(plug_in)) plug_in, "ynewuoa";
 
-local newuoa_maximize;
-func newuoa_minimize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+local newuoa_minimize, newuoa_maximize;
 /* DOCUMENT xmin = newuoa_minimize(f, x0, rhobeg, rhoend);
          or  obj = newuoa_minimize(f, x0, rhobeg, rhoend, all=1);
          or xmax = newuoa_maximize(f, x0, rhobeg, rhoend);
@@ -56,6 +55,8 @@ func newuoa_minimize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
 
    SEE ALSO: newuoa_create, newuoa_error.
  */
+
+func newuoa_minimize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
 {
   x = double(unref(x0));
   n = numberof(x);
@@ -141,7 +142,7 @@ extern newuoa_iterate;
 
      N is the number of variables, NPT is the number of interpolation
      conditions. Its value must be in the interval [N+2,(N+1)(N+2)/2].  The
-     ecommended number of points for building the quadratic model is NPT=2*N+1.
+     recommended number of points for building the quadratic model is NPT=2*N+1.
 
      RHOBEG and RHOEND are the initial and final values of a trust region
      radius, so both must be positive with RHOEND <= RHOBEG.  Typically RHOBEG
@@ -189,7 +190,7 @@ extern newuoa_iterate;
    REFERENCES
      The NEWUOA algorithm is described in:
 
-         M.J.D.  Powell, "The NEWUOA software for unconstrained minimization
+         M.J.D. Powell, "The NEWUOA software for unconstrained minimization
          without derivatives", in Large-Scale Nonlinear Optimization, editors
          G. Di Pillo and M. Roma, Springer (2006), pages 255-297.
 
