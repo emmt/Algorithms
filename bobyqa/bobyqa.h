@@ -183,9 +183,15 @@ FORTRAN_NAME(bobyqa,BOBYQA)(const INTEGER* n, const INTEGER* npt,
                             const INTEGER* iprint, const INTEGER* maxfun,
                             REAL* w);
 
+/* Wrapper function to emulate `newuoa_objfun` objective function calling the
+   user-defined `calfun_` subroutine. */
+extern REAL
+bobyqa_calfun_wrapper(const INTEGER n, const REAL* x, void* data);
+
 /* Subroutine that must be defined by the application to use the FORTRAN
    wrapper to BOBYQA. */
-extern int FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f);
+extern int
+FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f);
 
 #endif /* FORTRAN_LINKAGE */
 
