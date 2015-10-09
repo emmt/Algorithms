@@ -184,6 +184,9 @@ extern INTEGER newuoa_get_nevals(const newuoa_context_t* ctx);
    NULL), strictly positive otherwise. */
 extern REAL newuoa_get_rho(const newuoa_context_t* ctx);
 
+/*---------------------------------------------------------------------------*/
+/* FORTRAN SUPPORT */
+
 /* Depending on your FORTRAN compiler, the names of the compiled functions
    may have to be modified.  The various possibilities can be chosen via the
    macro FORTRAN_LINKAGE:
