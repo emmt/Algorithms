@@ -69,3 +69,5 @@ return $code
 
 ## No needs to remove spaces, astyle takes care of that; otherwise add:
 ## | sed -e 's/[ 	][ 	]*$//'
+
+#------------------------------------------------------------------------------
