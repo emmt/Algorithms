@@ -18,12 +18,13 @@ local newuoa_minimize, newuoa_maximize;
          or  obj = newuoa_maximize(f, x0, rhobeg, rhoend, all=1);
 
      Minimize or maximize the multi-variate function F starting at the initial
-     point X0.  RHOBEG and RHOEND are the initial and final values of the trust
-     region radius (0 < RHOEND <= RHOBEG).
+     point X0.  RHOBEG and RHOEND are the initial and final values of the
+     trust region radius (0 < RHOEND <= RHOBEG).
 
-     Note that the proper scaling of the variables is important for the success
-     of the algorithm.  RHOBEG should be set to the typical size of the region
-     to explorate and RHOEND should be set to the typical precision.
+     Note that the proper scaling of the variables is important for the
+     success of the algorithm.  RHOBEG should be set to the typical size of
+     the region to explorate and RHOEND should be set to the typical
+     precision.
 
      Keyword NPT sets the number of of interpolation conditions.  Its default
      value is equal to 2*N+1 (the recommended value).
@@ -47,8 +48,8 @@ local newuoa_minimize, newuoa_maximize;
 
      Keyword ERR sets the behavior in case of abnormal termination.  If ERR=0,
      anything but a success throws an error (this is also the default
-     behavior); if ERR > 0, non-fatal errors are reported by a warning message;
-     if ERR < 0, non-fatal errors are silently ignored.
+     behavior); if ERR > 0, non-fatal errors are reported by a warning
+     message; if ERR < 0, non-fatal errors are silently ignored.
 
      Keyword VERB set the verbosity level.
 
@@ -103,11 +104,11 @@ func newuoa_error(status, errmode)
          or newuoa_error, status, errmode;
 
      Report an error in NEWUOA according to the value of STATUS.  Nothing is
-     done if STATUS is NEWUOA_SUCCESS; otherwise, the optional argument ERRMODE
-     determines the behavior.  If ERRMODE = 0, the routine throws an error
-     (this is also the default behavior); if ERRMODE > 0, non-fatal errors are
-     reported by a warning message; if ERRMODE < 0, non-fatal errors are
-     silently ignored.
+     done if STATUS is NEWUOA_SUCCESS; otherwise, the optional argument
+     ERRMODE determines the behavior.  If ERRMODE = 0, the routine throws an
+     error (this is also the default behavior); if ERRMODE > 0, non-fatal
+     errors are reported by a warning message; if ERRMODE < 0, non-fatal
+     errors are silently ignored.
 
    SEE ALSO: newuoa_reason, error.
  */
@@ -136,13 +137,14 @@ extern newuoa_iterate;
 /* DOCUMENT ctx = newuoa_create(n, npt, rhobeg, rhoend, iprint, maxfun);
          or status = newuoa_iterate(ctx, f, x, c);
 
-     The function `newuoa_create` makes a new instance for Mike Powell's NEWUOA
-     algorithm for minimizing a function of many variables.  The method is
-     "derivatives free" (only the function values are needed).
+     The function `newuoa_create` makes a new instance for Mike Powell's
+     NEWUOA algorithm for minimizing a function of many variables.  The method
+     is "derivatives free" (only the function values are needed).
 
      N is the number of variables, NPT is the number of interpolation
      conditions. Its value must be in the interval [N+2,(N+1)(N+2)/2].  The
-     recommended number of points for building the quadratic model is NPT=2*N+1.
+     recommended number of points for building the quadratic model is
+     NPT=2*N+1.
 
      RHOBEG and RHOEND are the initial and final values of a trust region
      radius, so both must be positive with RHOEND <= RHOBEG.  Typically RHOBEG
@@ -151,17 +153,17 @@ extern newuoa_iterate;
      values of the variables.
 
      The value of IPRINT should be set to 0, 1, 2 or 3, which controls the
-     amount of printing. Specifically, there is no output if IPRINT=0 and there
-     is output only at the return if IPRINT=1. Otherwise, each new value of RHO
-     is printed, with the best vector of variables so far and the corresponding
-     value of the objective function.  Further, each new value of F with its
-     variables are output if IPRINT=3.
+     amount of printing. Specifically, there is no output if IPRINT=0 and
+     there is output only at the return if IPRINT=1. Otherwise, each new value
+     of RHO is printed, with the best vector of variables so far and the
+     corresponding value of the objective function.  Further, each new value
+     of F with its variables are output if IPRINT=3.
 
      MAXFUN must be set to an upper bound on the number of objective function
      calls.
 
-     The function `newuoa_iterate` performs an iteration of the algorithm given
-     F the function value at the current variables X.
+     The function `newuoa_iterate` performs an iteration of the algorithm
+     given F the function value at the current variables X.
 
      Typical usage is:
 

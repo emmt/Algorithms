@@ -18,22 +18,23 @@ local cobyla_minimize, cobyla_maximize;
          or  obj = cobyla_maximize(f, c, x0, rhobeg, rhoend, all=1);
 
      Minimize or maximize the multi-variate function F under the inequality
-     constraints implemented by C and starting at the initial point X0.  RHOBEG
-     and RHOEND are the initial and final values of the trust region radius (0
-     < RHOEND <= RHOBEG).
+     constraints implemented by C and starting at the initial point X0.
+     RHOBEG and RHOEND are the initial and final values of the trust region
+     radius (0 < RHOEND <= RHOBEG).
 
      The objective is to find X which solves one of the problems:
 
           min f(x)    s.t.   c(x) <= 0   (cobyla_minimize)
           max f(x)    s.t.   c(x) <= 0   (cobyla_maximize)
 
-     Arguments F and C are user defined functions which take a single argument,
-     the variables X, and return the function value and the constraints
-     respectively.  If there are no contraints, C can be empty.
+     Arguments F and C are user defined functions which take a single
+     argument, the variables X, and return the function value and the
+     constraints respectively.  If there are no contraints, C can be empty.
 
-     Note that the proper scaling of the variables is important for the success
-     of the algorithm.  RHOBEG should be set to the typical size of the region
-     to explorate and RHOEND should be set to the typical precision.
+     Note that the proper scaling of the variables is important for the
+     success of the algorithm.  RHOBEG should be set to the typical size of
+     the region to explorate and RHOEND should be set to the typical
+     precision.
 
      Keyword NPT sets the number of of interpolation conditions.  Its default
      value is equal to 2*N+1 (the recommended value).
@@ -59,8 +60,8 @@ local cobyla_minimize, cobyla_maximize;
 
      Keyword ERR sets the behavior in case of abnormal termination.  If ERR=0,
      anything but a success throws an error (this is also the default
-     behavior); if ERR > 0, non-fatal errors are reported by a warning message;
-     if ERR < 0, non-fatal errors are silently ignored.
+     behavior); if ERR > 0, non-fatal errors are reported by a warning
+     message; if ERR < 0, non-fatal errors are silently ignored.
 
      Keyword VERB set the verbosity level.
 
@@ -127,11 +128,11 @@ func cobyla_error(status, errmode)
          or cobyla_error, status, errmode;
 
      Report an error in COBYLA according to the value of STATUS.  Nothing is
-     done if STATUS is COBYLA_SUCCESS; otherwise, the optional argument ERRMODE
-     determines the behavior.  If ERRMODE = 0, the routine throws an error
-     (this is also the default behavior); if ERRMODE > 0, non-fatal errors are
-     reported by a warning message; if ERRMODE < 0, non-fatal errors are
-     silently ignored.
+     done if STATUS is COBYLA_SUCCESS; otherwise, the optional argument
+     ERRMODE determines the behavior.  If ERRMODE = 0, the routine throws an
+     error (this is also the default behavior); if ERRMODE > 0, non-fatal
+     errors are reported by a warning message; if ERRMODE < 0, non-fatal
+     errors are silently ignored.
 
    SEE ALSO: cobyla_reason, error.
  */
@@ -160,13 +161,14 @@ extern cobyla_iterate;
 /* DOCUMENT ctx = cobyla_create(n, m, rhobeg, rhoend, iprint, maxfun);
          or status = cobyla_iterate(ctx, f, x, c);
 
-     The function `cobyla_create` makes a new instance for Mike Powell's COBYLA
-     algorithm for minimizing a function of a few variables.  The method is
-     "derivatives free" (only the function values are needed) and accounts for
-     inequality constraints on the variables.  N is the number of variables, M
-     is the number of constraints, RHOBEG and RHOEND are the initial and final
-     size of the trust region, IPRINT control the verbosity of the method (see
-     below) and MAXFUN is the maximum number of function evaluations.
+     The function `cobyla_create` makes a new instance for Mike Powell's
+     COBYLA algorithm for minimizing a function of a few variables.  The
+     method is "derivatives free" (only the function values are needed) and
+     accounts for inequality constraints on the variables.  N is the number of
+     variables, M is the number of constraints, RHOBEG and RHOEND are the
+     initial and final size of the trust region, IPRINT control the verbosity
+     of the method (see below) and MAXFUN is the maximum number of function
+     evaluations.
 
      The objective is to find X which solves the problem:
 
@@ -185,13 +187,14 @@ extern cobyla_iterate;
      IPRINT should be set to 0, 1, 2 or 3, which controls the amount of
      printing during the calculation.  Specifically, there is no output if
      IPRINT=0 and there is output only at the end of the calculation if
-     IPRINT=1.  Otherwise each new value of RHO and SIGMA is printed.  Further,
-     the vector of variables and some function information are given either
-     when RHO is reduced or when each new value of F(X) is computed in the
-     cases IPRINT=2 or IPRINT=3 respectively.
+     IPRINT=1.  Otherwise each new value of RHO and SIGMA is printed.
+     Further, the vector of variables and some function information are given
+     either when RHO is reduced or when each new value of F(X) is computed in
+     the cases IPRINT=2 or IPRINT=3 respectively.
 
-     The function `cobyla_iterate` performs an iteration of the algorithm given
-     F the function value at X the current variables and C the constraints.
+     The function `cobyla_iterate` performs an iteration of the algorithm
+     given F the function value at X the current variables and C the
+     constraints.
 
      Typical usage is:
 
