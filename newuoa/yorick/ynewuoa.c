@@ -203,13 +203,4 @@ static void set_global_int(const char* name, int value)
   yarg_drop(1);
 }
 
-/*
- * Local Variables:
- * mode: C
- * tab-width: 8
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * fill-column: 79
- * coding: utf-8
- * End:
- */
+/*---------------------------------------------------------------------------*/

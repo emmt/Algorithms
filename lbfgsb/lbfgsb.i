@@ -419,14 +419,4 @@ func lbfgsb_solve(fg, x, inf=, sup=, bnd=, mem=,
   return (save_best ? lbfgsb_best_x : x);
 }
 
-/*
- * Local Variables:
- * mode: Yorick
- * c-basic-offset: 2
- * tab-width: 8
- * indent-tabs-mode: nil
- * fill-column: 79
- * coding: utf-8
- * ispell-local-dictionary: "american"
- * End:
- */
+/*---------------------------------------------------------------------------*/

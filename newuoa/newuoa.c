@@ -2586,13 +2586,4 @@ print_x(FILE* output, INTEGER n, const REAL x[], const REAL dx[])
 
 #endif /* _NEWUOA_PART2 */
 
-/*
- * Local Variables:
- * mode: C
- * tab-width: 8
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * fill-column: 79
- * coding: utf-8
- * End:
- */
+/*---------------------------------------------------------------------------*/

@@ -2,11 +2,11 @@
 #
 # Configuration script for a Yorick plugin.
 #
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # Copyright (C) 2015: Éric Thiébaut <eric.thiebaut@univ-lyon1.fr>
 #
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 # The following default values are specific to the package.  They can be
 # overwritten by options on the command line.
@@ -209,10 +209,4 @@ fi
 echo "Makefile has been updated."
 echo "You can run 'make' and 'make install' now."
 
-# Local Variables:
-# mode: sh
-# tab-width: 8
-# indent-tabs-mode: nil
-# fill-column: 78
-# coding: utf-8
-# End:
+#-------------------------------------------------------------------------------

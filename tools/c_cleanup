@@ -27,7 +27,7 @@ options="--options=none --mode=c --quiet --preserve-date \
   --min-conditional-indent=0 --max-instatement-indent=80 \
   --keep-one-line-blocks --keep-one-line-statements \
   --align-pointer=name"
-# --suffix=none 
+# --suffix=none
 
 ## Option --align-reference=... is only available after version 2.02.
 version=$($astyle --version 2>&1 \
@@ -69,11 +69,3 @@ return $code
 
 ## No needs to remove spaces, astyle takes care of that; otherwise add:
 ## | sed -e 's/[ 	][ 	]*$//'
-
-# Local Variables:
-# mode: sh
-# tab-width: 8
-# indent-tabs-mode: nil
-# fill-column: 78
-# coding: utf-8
-# End:

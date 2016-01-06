@@ -201,13 +201,4 @@ FORTRAN_NAME(calfun,CALFUN)(const INTEGER* n, REAL* x, REAL* f);
 
 #endif /* _BOBYQA_H */
 
-/*
- * Local Variables:
- * mode: C
- * tab-width: 8
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * fill-column: 79
- * coding: utf-8
- * End:
- */
+/*---------------------------------------------------------------------------*/

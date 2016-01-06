@@ -19,11 +19,3 @@ test "$bypass" = "yes" && exec cat
 
 expand --initial --tabs=8 \
   | sed -e 's/\x0d$//;s/[ 	]*$//;s/[ 	]*\x0d/\x0a/g'
-
-# Local Variables:
-# mode: sh
-# tab-width: 8
-# indent-tabs-mode: nil
-# fill-column: 78
-# coding: utf-8
-# End:

@@ -383,14 +383,4 @@ extern int lbfgsb(lbfgsb_integer_t n, lbfgsb_integer_t m,
 _LBFGSB_END_DECLS
 #endif /* _LBFGSB_H */
 
-/*
- * Local Variables:
- * mode: C
- * c-basic-offset: 2
- * tab-width: 8
- * indent-tabs-mode: nil
- * fill-column: 79
- * coding: utf-8
- * ispell-local-dictionary: "american"
- * End:
- */
+/*---------------------------------------------------------------------------*/

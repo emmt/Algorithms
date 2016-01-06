@@ -180,7 +180,7 @@ extern newuoa_iterate;
      following members:
 
          ctx.n       number of variables
-         ctx.npt     number of intepolation points
+         ctx.npt     number of interpolation points
          ctx.rho     radius of the trust region
          ctx.status  current status
          ctx.nevals  number of function evaluations so far
@@ -222,14 +222,4 @@ extern newuoa_init;
  */
 newuoa_init;
 
-/*
- * Local Variables:
- * mode: Yorick
- * tab-width: 8
- * indent-tabs-mode: nil
- * c-basic-offset: 2
- * fill-column: 79
- * coding: utf-8
- * ispell-local-dictionary: "american"
- * End:
- */
+/*---------------------------------------------------------------------------*/
