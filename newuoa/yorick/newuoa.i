@@ -12,25 +12,27 @@
 if (is_func(plug_in)) plug_in, "ynewuoa";
 
 local newuoa_minimize, newuoa_maximize;
-/* DOCUMENT xmin = newuoa_minimize(f, x0, rhobeg, rhoend);
-         or  obj = newuoa_minimize(f, x0, rhobeg, rhoend, all=1);
-         or xmax = newuoa_maximize(f, x0, rhobeg, rhoend);
-         or  obj = newuoa_maximize(f, x0, rhobeg, rhoend, all=1);
+/* DOCUMENT newuoa_minimize(f, x0, rhobeg, rhoend);
+         or newuoa_minimize(f, x0, rhobeg, rhoend, scale);
+         or newuoa_maximize(f, x0, rhobeg, rhoend);
+         or newuoa_maximize(f, x0, rhobeg, rhoend, scale);
 
      Minimize or maximize the multi-variate function F starting at the initial
      point X0.  RHOBEG and RHOEND are the initial and final values of the
      trust region radius (0 < RHOEND <= RHOBEG).
 
-     Note that the proper scaling of the variables is important for the
-     success of the algorithm.  RHOBEG should be set to the typical size of
-     the region to explorate and RHOEND should be set to the typical
-     precision.
+     RHOBEG should be set to the typical size of the region to explorate and
+     RHOEND should be set to the typical precision.  The proper scaling of the
+     variables is important for the success of the algorithm and the optional
+     SCALE argument should be specified if the typical precision is not the
+     same for all variables.  If specified, SCALE is an array of same
+     dimensions as X0 with strictly nonnegative values, such that SCALE(i)*RHO
+     (with RHO the trust region radius) is the size of the trust region for
+     the i-th variable.  If SCALE is not specified, a unit scaling for all the
+     variables is assumed.
 
-     Keyword NPT sets the number of of interpolation conditions.  Its default
-     value is equal to 2*N+1 (the recommended value).
-
-     Keyword MAXFUN sets the maximum number of function evaluations.  Its
-     default value is equal to 30*N.
+     The returned value is XMIN (resp. XMAX) the variables which minimize
+     (resp. maximize) the function F.
 
      If keyword ALL is true, the result is a structured object.  For
      `newuoa_minimize`, the members of the returned object are:
@@ -39,13 +41,18 @@ local newuoa_minimize, newuoa_maximize;
         obj.xmin   = corresponding parameters
         obj.nevals = number of function evaluations
         obj.status = status of the algorithm upon return
-        obj.rho    = final radius of the trust region
+        obj.rho    = final radius of the trust region for each variable
 
      For `newuoa_maximize`, the two first members are:
 
         obj.fmax   = minimal function value found
         obj.xmax   = corresponding parameters
 
+     Keyword NPT sets the number of of interpolation conditions.  Its default
+     value is equal to 2*N+1 (the recommended value).
+
+     Keyword MAXFUN sets the maximum number of function evaluations.  Its
+     default value is equal to 30*N.
      Keyword ERR sets the behavior in case of abnormal termination.  If ERR=0,
      anything but a success throws an error (this is also the default
      behavior); if ERR > 0, non-fatal errors are reported by a warning
@@ -57,46 +64,54 @@ local newuoa_minimize, newuoa_maximize;
    SEE ALSO: newuoa_create, newuoa_error.
  */
 
-func newuoa_minimize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+func newuoa_minimize(f, x0, rhobeg, rhoend, scale,
+                     npt=, maxfun=, all=, verb=, err=)
 {
   x = double(unref(x0));
   n = numberof(x);
+  scale = newuoa_scaling(x, unref(scale));
   ctx = newuoa_create(n, (is_void(npt) ? 2*n + 1 : npt), rhobeg, rhoend,
                       (is_void(verb) ? 0 : verb),
                       (is_void(maxfun) ? 30*n : maxfun));
   fmin = [];
+  u = x/scale;
   do {
     fx = f(x);
     if (is_void(fmin) || fmin > fx) {
       fmin = fx;
       xmin = x;
     }
-    status = newuoa_iterate(ctx, fx, x);
+    status = newuoa_iterate(ctx, fx, u);
+    x = scale*u;
   } while (status == NEWUOA_ITERATE);
   if (status != NEWUOA_SUCCESS) newuoa_error, status, err;
   return (all ? save(fmin, xmin, nevals = ctx.nevals,
-                     status, rho = ctx.rho) : x);
+                     status, rho = ctx.rho*scale) : x);
 }
 
-func newuoa_maximize(f, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+func newuoa_maximize(f, x0, rhobeg, rhoend, scale,
+                     npt=, maxfun=, all=, verb=, err=)
 {
   x = double(unref(x0));
   n = numberof(x);
+  scale = newuoa_scaling(x, unref(scale));
   ctx = newuoa_create(n, (is_void(npt) ? 2*n + 1 : npt), rhobeg, rhoend,
                       (is_void(verb) ? 0 : verb),
                       (is_void(maxfun) ? 30*n : maxfun));
   fmax = [];
+  u = x/scale;
   do {
     fx = f(x);
     if (is_void(fmax) || fmax < fx) {
       fmax = fx;
       xmax = x;
     }
-    status = newuoa_iterate(ctx, -fx, x);
+    status = newuoa_iterate(ctx, -fx, u);
+    x = scale*u;
   } while (status == NEWUOA_ITERATE);
   if (status != NEWUOA_SUCCESS) newuoa_error, status, err;
   return (all ? save(fmax, xmax, nevals = ctx.nevals,
-                     status, rho = ctx.rho) : x);
+                     status, rho = ctx.rho*scale) : x);
 }
 
 func newuoa_error(status, errmode)
@@ -128,6 +143,26 @@ func newuoa_error(status, errmode)
   }
 }
 errs2caller, newuoa_error;
+
+func newuoa_scaling(x, scl)
+/* DOCUMENT newuoa_scaling(x, scl)
+     Get scaling of variables X.  If SCL is void, an array of ones of same
+     dimensions as X is returned; otherwise SCL is returned after checking
+     that it is an array of same dimensions as X with strictly nonnegative
+     values and, perhaps, converting to double precision.
+
+   SEE ALSO: newuoa_minimize.
+ */
+{
+  if (is_void(scl)) return array(1.0, dimsof(x));
+  if ((id = identof(scl)) <= Y_DOUBLE && min(scl) > 0 &&
+      numberof((sdims = dimsof(scl))) == numberof((xdims = dimsof(x))) &&
+      allof(sdims == xdims)) {
+    return (id != Y_DOUBLE ? double(scl) : scl);
+  }
+  error, "bad scaling of variables";
+}
+errs2caller, newuoa_scaling;
 
 local NEWUOA_ITERATE, NEWUOA_SUCCESS, NEWUOA_BAD_NPT, NEWUOA_ROUNDING_ERRORS;
 local NEWUOA_TOO_MANY_EVALUATIONS, NEWUOA_STEP_FAILED, NEWUOA_BAD_ADDRESS;
