@@ -12,10 +12,10 @@
 if (is_func(plug_in)) plug_in, "ycobyla";
 
 local cobyla_minimize, cobyla_maximize;
-/* DOCUMENT xmin = cobyla_minimize(f, c, x0, rhobeg, rhoend);
-         or  obj = cobyla_minimize(f, c, x0, rhobeg, rhoend, all=1);
-         or xmax = cobyla_maximize(f, c, x0, rhobeg, rhoend);
-         or  obj = cobyla_maximize(f, c, x0, rhobeg, rhoend, all=1);
+/* DOCUMENT cobyla_minimize(f, c, x0, rhobeg, rhoend);
+         or cobyla_minimize(f, c, x0, rhobeg, rhoend, scale);
+         or cobyla_maximize(f, c, x0, rhobeg, rhoend);
+         or cobyla_maximize(f, c, x0, rhobeg, rhoend, scale);
 
      Minimize or maximize the multi-variate function F under the inequality
      constraints implemented by C and starting at the initial point X0.
@@ -31,16 +31,19 @@ local cobyla_minimize, cobyla_maximize;
      argument, the variables X, and return the function value and the
      constraints respectively.  If there are no contraints, C can be empty.
 
-     Note that the proper scaling of the variables is important for the
-     success of the algorithm.  RHOBEG should be set to the typical size of
-     the region to explorate and RHOEND should be set to the typical
-     precision.
+     RHOBEG should be set to the typical size of the region to explorate and
+     RHOEND should be set to the typical precision.  The proper scaling of the
+     variables is important for the success of the algorithm and the optional
+     SCALE argument should be specified if the typical precision is not the
+     same for all variables.  If specified, SCALE is an array of same
+     dimensions as X0 with strictly nonnegative values, such that SCALE(i)*RHO
+     (with RHO the trust region radius) is the size of the trust region for
+     the i-th variable.  If SCALE is not specified, a unit scaling for all the
+     variables is assumed.
 
-     Keyword NPT sets the number of of interpolation conditions.  Its default
-     value is equal to 2*N+1 (the recommended value).
-
-     Keyword MAXFUN sets the maximum number of function evaluations.  Its
-     default value is equal to 30*N.
+     The returned value is XMIN (resp. XMAX) the variables which minimize
+     (resp. maximize) the function F under the inequality constraints
+     implemented by C.
 
      If keyword ALL is true, the result is a structured object.  For
      `cobyla_minimize`, the members of the returned object are:
@@ -50,13 +53,19 @@ local cobyla_minimize, cobyla_maximize;
         obj.xmin   = corresponding parameters
         obj.nevals = number of function evaluations
         obj.status = status of the algorithm upon return
-        obj.rho    = final radius of the trust region
+        obj.rho    = final radius of the trust region for each variable
 
      For `cobyla_maximize`, the two first members are:
 
         obj.fmax   = minimal function value found
         obj.cmax   = constraints at the maximum
         obj.xmax   = corresponding parameters
+
+     Keyword NPT sets the number of of interpolation conditions.  Its default
+     value is equal to 2*N+1 (the recommended value).
+
+     Keyword MAXFUN sets the maximum number of function evaluations.  Its
+     default value is equal to 30*N.
 
      Keyword ERR sets the behavior in case of abnormal termination.  If ERR=0,
      anything but a success throws an error (this is also the default
@@ -69,17 +78,20 @@ local cobyla_minimize, cobyla_maximize;
    SEE ALSO: cobyla_create, cobyla_error.
  */
 
-func cobyla_minimize(f, c, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+func cobyla_minimize(f, c, x0, rhobeg, rhoend, scale,
+                     npt=, maxfun=, all=, verb=, err=)
 {
   local cx, fx, fmin, cmin, xmin;
   x = double(unref(x0));
   n = numberof(x);
   constrained = (! is_void(c));
   if (constrained) cx = c(x);
+  scale = cobyla_scaling(x, unref(scale));
   ctx = cobyla_create(n, numberof(cx), rhobeg, rhoend,
                       (is_void(verb) ? 0 : verb),
                       (is_void(maxfun) ? 50*n : maxfun));
   start = 1n;
+  u = x/scale;
   do {
     if (constrained && ! start) cx = c(x);
     fx = f(x);
@@ -89,24 +101,28 @@ func cobyla_minimize(f, c, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
       xmin = x;
       start = 0n;
     }
-    status = cobyla_iterate(ctx, fx, x, cx);
+    status = cobyla_iterate(ctx, fx, u, cx);
+    x = scale*u;
   } while (status == COBYLA_ITERATE);
   if (status != COBYLA_SUCCESS) cobyla_error, status, err;
   return (all ? save(fmin, cmin, xmin, nevals = ctx.nevals,
-                     status, rho = ctx.rho) : x);
+                     status, rho = ctx.rho*scale) : x);
 }
 
-func cobyla_maximize(f, c, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
+func cobyla_maximize(f, c, x0, rhobeg, rhoend, scale,
+                     npt=, maxfun=, all=, verb=, err=)
 {
   local cx, fx, fmax, cmax, xmax;
   x = double(unref(x0));
   n = numberof(x);
   constrained = (! is_void(c));
   if (constrained) cx = c(x);
+  scale = cobyla_scaling(x, unref(scale));
   ctx = cobyla_create(n, numberof(cx), rhobeg, rhoend,
                       (is_void(verb) ? 0 : verb),
                       (is_void(maxfun) ? 50*n : maxfun));
   start = 1n;
+  u = x/scale;
   do {
     if (constrained && ! start) cx = c(x);
     fx = f(x);
@@ -116,11 +132,12 @@ func cobyla_maximize(f, c, x0, rhobeg, rhoend, npt=, maxfun=, all=, verb=, err=)
       xmax = x;
       start = 0n;
     }
-    status = cobyla_iterate(ctx, -fx, x, cx);
+    status = cobyla_iterate(ctx, -fx, u, cx);
+    x = scale*u;
   } while (status == COBYLA_ITERATE);
   if (status != COBYLA_SUCCESS) cobyla_error, status, err;
   return (all ? save(fmax, cmax, xmax, nevals = ctx.nevals,
-                     status, rho = ctx.rho) : x);
+                     status, rho = ctx.rho*scale) : x);
 }
 
 func cobyla_error(status, errmode)
@@ -152,6 +169,26 @@ func cobyla_error(status, errmode)
   }
 }
 errs2caller, cobyla_error;
+
+func cobyla_scaling(x, scl)
+/* DOCUMENT cobyla_scaling(x, scl)
+     Get scaling of variables X.  If SCL is void, an array of ones of same
+     dimensions as X is returned; otherwise SCL is returned after checking
+     that it is an array of same dimensions as X with strictly nonnegative
+     values and, perhaps, converting to double precision.
+
+   SEE ALSO: cobyla_minimize.
+ */
+{
+  if (is_void(scl)) return array(1.0, dimsof(x));
+  if ((id = identof(scl)) <= Y_DOUBLE && min(scl) > 0 &&
+      numberof((sdims = dimsof(scl))) == numberof((xdims = dimsof(x))) &&
+      allof(sdims == xdims)) {
+    return (id != Y_DOUBLE ? double(scl) : scl);
+  }
+  error, "bad scaling of variables";
+}
+errs2caller, cobyla_scaling;
 
 local COBYLA_SUCCESS, COBYLA_ITERATE, COBYLA_ROUNDING_ERRORS;
 local COBYLA_TOO_MANY_EVALUATIONS, COBYLA_BAD_ADDRESS;
