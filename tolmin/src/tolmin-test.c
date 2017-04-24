@@ -110,8 +110,9 @@ int main(int argc, char* argv[])
   const INTEGER maxm = 15; /* max. numb. of constraints */
 
   /* Local variables */
-  INTEGER i, j, k, m, nact, info, icase, iprint, meq;
+  INTEGER i, j, k, m, nact, icase, iprint, meq;
   INTEGER iact[27];
+  int info;
   REAL a[ia*maxm], b[maxm], f;
   REAL xl[n], xu[n], acc, cth, par[20];
   REAL sth;
@@ -160,13 +161,12 @@ int main(int argc, char* argv[])
     }
 
     /* Call the optimization package. */
-    info = 0;
     fprintf(OUTPUT, "\n\n     CALL OF TOLMIN WITH  "
             "ACC =%11.4E  AND  IPRINT =%3ld\n",
             (double)acc, (long)iprint);
-    tolmin(fgcalc, NULL, n, m, meq, a, ia, b, xl, xu, x, acc, iact,
-           &nact, par, iprint, &info, w);
-    fprintf(OUTPUT, "\n     RETURN FROM TOLMIN WITH INFO =%2d\n", (int)info);
+    info = tolmin(fgcalc, NULL, n, m, meq, a, ia, b, xl, xu, x, acc, iact,
+                  &nact, par, iprint, 0, w);
+    fprintf(OUTPUT, "\n     RETURN FROM TOLMIN WITH INFO =%2d\n", info);
     f = fgcalc(NULL, x, w);
     fprintf(OUTPUT, "\n     FINAL VALUE OF OBJECTIVE FUNCTION =%20.12E\n",
             (double)f);

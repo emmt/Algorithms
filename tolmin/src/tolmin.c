@@ -1385,7 +1385,7 @@ static void
 minfun(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
        const REAL a[], const INTEGER ia, const REAL b[], const REAL xl[],
        const REAL xu[], REAL x[], const REAL acc, INTEGER iact[],
-       INTEGER* nact, REAL par[], const INTEGER iprint, INTEGER* info,
+       INTEGER* nact, REAL par[], const INTEGER iprint, int* info,
        REAL g[], REAL z[], REAL u[], REAL xbig[], const REAL relacc,
        REAL* zznorm, const REAL tol, const INTEGER meql, const INTEGER mtot,
        INTEGER* iterc, INTEGER* nfvals, const INTEGER nfmax, REAL reskt[],
@@ -1537,7 +1537,7 @@ minfun(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
 static void
 satact(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
        const REAL b[], const REAL xl[], const REAL xu[], REAL x[],
-       INTEGER iact[], INTEGER* nact, INTEGER* info, REAL z[], REAL u[],
+       INTEGER iact[], INTEGER* nact, int* info, REAL z[], REAL u[],
        REAL xbig[], const REAL relacc, const REAL tol, const INTEGER meql)
 {
   INTEGER i, j, k, jx, iz, idrop, n1;
@@ -1681,7 +1681,7 @@ adjtol(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
 static void
 getfes(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
        const REAL b[], const REAL xl[], const REAL xu[], REAL x[],
-       INTEGER iact[], INTEGER* nact, REAL par[], INTEGER* info, REAL g[],
+       INTEGER iact[], INTEGER* nact, REAL par[], int* info, REAL g[],
        REAL z[], REAL u[], REAL xbig[], const REAL relacc, REAL* tol,
        const INTEGER meql, INTEGER* msat, const INTEGER mtot, REAL bres[],
        REAL d[], REAL ztg[], REAL gm[], REAL gmnew[], REAL parnew[],
@@ -1769,7 +1769,7 @@ getrelacc(void)
 
 static void
 initzu(const INTEGER n, const INTEGER m, const REAL xl[], const REAL xu[],
-       REAL x[], INTEGER iact[], INTEGER* meql, INTEGER* info, REAL z[],
+       REAL x[], INTEGER iact[], INTEGER* meql, int* info, REAL z[],
        REAL u[], REAL xbig[])
 {
   INTEGER i, j, nn, iz, jact;
@@ -1814,7 +1814,7 @@ initzu(const INTEGER n, const INTEGER m, const REAL xl[], const REAL xu[],
 static void
 eqcons(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
        const INTEGER ia, const REAL b[], const REAL xu[], INTEGER iact[],
-       INTEGER* meql, INTEGER* info, REAL z[], REAL u[], const REAL relacc,
+       INTEGER* meql, int* info, REAL z[], REAL u[], const REAL relacc,
        REAL am[], REAL cgrad[])
 {
   INTEGER i, j, k, jm, np, iz, keq;
@@ -1883,28 +1883,25 @@ eqcons(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
 }
 
 
-static void
+static int
 minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
        const INTEGER meq, const REAL a[], const INTEGER ia, const REAL b[],
        const REAL xl[], const REAL xu[], REAL x[], const REAL acc,
        INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
-       INTEGER* info, REAL g[], REAL z[], REAL u[], REAL xbig[], REAL reskt[],
+       INTEGER nfmax, REAL g[], REAL z[], REAL u[], REAL xbig[], REAL reskt[],
        REAL bres[], REAL d[], REAL ztg[], REAL gm[], REAL xs[], REAL gs[])
 {
-  INTEGER i, k, mp, meql, msat, mtot, iterc, nfmax, nfvals;
+  INTEGER i, k, mp, meql, msat, mtot, iterc, nfvals;
   REAL relacc, tol, zznorm;
+  int info;
 
   /* Initialize ZZNORM, ITERC, NFVALS and NFMAX. */
   zznorm = -1.0;
   iterc = 0;
   nfvals = 0;
-  nfmax = 0;
-  if (*info > 0) {
-    nfmax = *info;
-  }
 
   /* Check the bounds on N, M and MEQ. */
-  *info = 4;
+  info = 4;
   if (max(max(1 - n, -m), meq*(meq - m)) > 0) {
     if (iprint != 0) {
       fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
@@ -1915,9 +1912,9 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
 
   /* Initialize RELACC, Z, U and TOL. */
   relacc = getrelacc();
-  initzu(n, m, xl, xu, x, iact, &meql, info, z, u, xbig);
+  initzu(n, m, xl, xu, x, iact, &meql, &info, z, u, xbig);
   tol = max(0.01, 10.0*relacc);
-  if (*info == 4) {
+  if (info == 4) {
     if (iprint != 0) {
       fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "A LOWER BOUND EXCEEDS AN UPPER BOUND");
@@ -1927,8 +1924,8 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
 
   /* Add any equality constraints to the active set. */
   if (meq > 0) {
-    eqcons(n, m, meq, a, ia, b, xu, iact, &meql, info, z, u, relacc, xs, gs);
-    if (*info == 5) {
+    eqcons(n, m, meq, a, ia, b, xu, iact, &meql, &info, z, u, relacc, xs, gs);
+    if (info == 5) {
       if (iprint != 0) {
         fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
                 "THE EQUALITY CONSTRAINTS ARE INCONSISTENT");
@@ -1950,14 +1947,14 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   }
 
   /* Try to satisfy the bound constraints. */
-  getfes(n, m, a, ia, b, xl, xu, x, iact, nact, par, info, g, z, u, xbig,
+  getfes(n, m, a, ia, b, xl, xu, x, iact, nact, par, &info, g, z, u, xbig,
          relacc, &tol, meql, &msat, mtot, bres, d, ztg, gm, reskt, xs, gs);
   if (msat < mtot) {
     if (iprint != 0) {
       fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "THE EQUALITIES AND BOUNDS ARE INCONSISTENT");
     }
-    *info = 6;
+    info = 6;
     goto L40;
   }
 
@@ -1972,14 +1969,14 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
 
   /* Correct any constraint violations. */
  L30:
-  getfes(n, m, a, ia, b, xl, xu, x, iact, nact, par, info, g, z, u, xbig,
+  getfes(n, m, a, ia, b, xl, xu, x, iact, nact, par, &info, g, z, u, xbig,
          relacc, &tol, meql, &msat, mtot, bres, d, ztg, gm, reskt, xs, gs);
   if (msat < mtot) {
     if (iprint != 0) {
       fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "THE CONSTRAINTS ARE INCONSISTENT");
     }
-    *info = 7;
+    info = 7;
     goto L40;
   } else if (meql == n) {
     if (iprint != 0) {
@@ -1993,7 +1990,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   /* Minimize the objective function in the case when constraints are
    *   treated as degenerate if their residuals are less than TOL. */
   minfun(fg, ctx, n, m, a, ia, b, xl, xu, x, acc, iact, nact, par, iprint,
-         info, g, z, u, xbig, relacc, &zznorm, tol, meql, mtot, &iterc,
+         &info, g, z, u, xbig, relacc, &zznorm, tol, meql, mtot, &iterc,
          &nfvals, nfmax, reskt, bres, d, ztg, gm, xs, gs);
 
   /* Reduce TOL if necessary. */
@@ -2002,32 +1999,29 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
       adjtol(n, m, a, ia, b, xl, xu, x, iact, *nact, xbig, relacc, &tol, meql);
       goto L30;
     } else {
-      *info = 8;
+      info = 8;
     }
   }
   if (iprint != 0) {
-    if (*info == 1) {
+    if (info == 1) {
       fprintf(OUTPUT, "\n     %s\n",
               "TOLMIN HAS ACHIEVED THE REQUIRED ACCURACY");
-    }
-    if (*info == 2) {
+    } else if (info == 2) {
       fprintf(OUTPUT, "\n     %s\n",
               "TOLMIN CAN MAKE NO FURTHER PROGRESS BECAUSE "
               "OF ROUNDING ERRORS");
-    }
-    if (*info == 3) {
+    } else if (info == 3) {
       fprintf(OUTPUT, "\n     %s\n",
               "TOLMIN CAN MAKE NO FURTHER PROGRESS BECAUSE "
               "F WILL NOT DECREASE ANY MORE");
-    }
-    if (*info == 8) {
+    } else if (info == 8) {
       fprintf(OUTPUT, "\n     %s\n",
               "TOLMIN HAS REACHED THE GIVEN LIMIT ON "
               "THE NUMBER OF CALLS OF FGCALC");
     }
   }
  L40:
-  return;
+  return info;
 }
 
 /* This is the entry point to a package of subroutines that calculate the
@@ -2110,12 +2104,18 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  *    values of IACT(K) K=1(1)NACT, PAR(K) K=1(1)NACT and RESKT(I)
  *    I=1(1)N.  The reason for returning to the calling program is also
  *    displayed when IPRINT is nonzero.
- * INFO is an integer variable that should be set to zero initially,
- *    unless the user wishes to impose an upper bound on the number of
- *    evaluations of the objective function and its gradient, in which
- *    case INFO should be set to the value of this bound.  On the exit
- *    from TOLMIN it will have one of the following integer values to
- *    indicate the reason for leaving the optimization package:
+ * NFMAX is an integer variable that should be nonnegative.  It should be
+ *    zero if the caller does not want to impose an upper bound on the
+ *    number of evaluations of the objective function and its gradient;
+ *    otherwise it should be set to the value of this bound.
+ * W(.) is a working space array of real variables that must be provided
+ *    by the user.  Its length must be at least (M+11*N+N**2).  On exit
+ *    from the package one can find the final components of GRAD(F) and
+ *    RESKT(.) in W(1),...,W(N) and W(N+1),...,W(2*N) respectively.
+ *
+ * The returned value is an integer, say INFO, with one of the following
+ *    integer values to indicate the reason for leaving the optimization
+ *    package:
  *         INFO=1   X(.) is feasible and the condition that depends on
  *    ACC is satisfied.
  *         INFO=2   X(.) is feasible and rounding errors are preventing
@@ -2144,14 +2144,12 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  *         INFO=8   In this case the limit on the number of calls of
  *    subroutine FGCALC (see below) has been reached, and there would
  *    have been further calculation otherwise.
- * W(.) is a working space array of real variables that must be provided
- *    by the user.  Its length must be at least (M+11*N+N**2).  On exit
- *    from the package one can find the final components of GRAD(F) and
- *    RESKT(.) in W(1),...,W(N) and W(N+1),...,W(2*N) respectively.
+ *
  * Note 1.   The variables N, M, MEQ, IA, ACC and IPRINT and the elements
  *    of the arrays A(,.,), B(.), XL(.) and XU(.) are not altered by the
  *    optimization procedure.  Their values, the value of INFO and the
  *    initial components of X(.) must be set on entry to TOLMIN.
+ *
  * Note 2.   Of course the package needs the objective function and its
  *    gradient.  Therefore the user must provide a subroutine called
  *    FGCALC, its first two lines being
@@ -2163,12 +2161,12 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  *    set them in F and G(I) I=1(1)N respectively, without disturbing N
  *    or any of the components of X(.).
  */
-void
+int
 tolmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
        const INTEGER meq, const REAL a[], const INTEGER ia, const REAL b[],
        const REAL xl[], const REAL xu[], REAL x[], const REAL acc,
        INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
-       INTEGER* info, REAL w[])
+       INTEGER nfmax, REAL w[])
 {
   INTEGER id, ig, iu, iz, igm, igs, ixs, iztg, ixbig, ibres;
   INTEGER ireskt;
@@ -2187,7 +2185,7 @@ tolmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   igs = ixs + n;
 
   /* Call the optimization package. */
-  minflc(fg, ctx, n, m, meq, a, ia, b, xl, xu, x, acc, iact, nact, par,
-         iprint, info, &W(ig), &W(iz), &W(iu), &W(ixbig), &W(ireskt),
-         &W(ibres), &W(id), &W(iztg), &W(igm), &W(ixs), &W(igs));
+  return minflc(fg, ctx, n, m, meq, a, ia, b, xl, xu, x, acc, iact, nact, par,
+                iprint, nfmax, &W(ig), &W(iz), &W(iu), &W(ixbig), &W(ireskt),
+                &W(ibres), &W(id), &W(iztg), &W(igm), &W(ixs), &W(igs));
 }
