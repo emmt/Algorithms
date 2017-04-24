@@ -10,14 +10,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
-  extern REAL fgcalc(const INTEGER n, const REAL x[], REAL g[]);
+  typedef REAL tolmin_objective(void* ctx, const REAL x[], REAL g[]);
 
-  extern void getmin(const INTEGER n, const INTEGER m, const INTEGER meq,
-                     const REAL a[], const INTEGER ia, const REAL b[],
-                     const REAL xl[], const REAL xu[], REAL x[],
-                     const REAL acc, INTEGER iact[], INTEGER* nact,
-                     REAL par[], const INTEGER iprint, INTEGER* info,
-                     REAL w[]);
+  extern void getmin(tolmin_objective fg, void* ctx, const INTEGER n,
+                     const INTEGER m, const INTEGER meq, const REAL a[],
+                     const INTEGER ia, const REAL b[], const REAL xl[],
+                     const REAL xu[], REAL x[], const REAL acc,
+                     INTEGER iact[], INTEGER* nact, REAL par[],
+                     const INTEGER iprint, INTEGER* info, REAL w[]);
 
 #if 0
 

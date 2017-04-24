@@ -32,9 +32,10 @@
  *  - Replace all FORTRAN i/o by calls to the standard C library (the outputs
  *    with IPRINT=-1 are identical between the original FORTRAN code and the C
  *    version for the provided example).
+ *  - Pass objective function as argument.
  *
  * Things to do:
- *  - Pass objective function as argument.
+ *  - Rename GETMIN as TOLMIN.
  *  - Use 2 workspaces, one for integers, one for reals.
  *  - Define status constants and related messages.
  *  - Write FORTRAN wrapper with the same syntax as the original code.
@@ -1150,9 +1151,10 @@ ktvec(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
 
 
 static void
-lsrch(const INTEGER n, REAL x[], REAL g[], const REAL d[], REAL xs[],
-      REAL gs[], const REAL relacc, const REAL stepcb, const REAL ddotg,
-      REAL* f, REAL* step, INTEGER* nfvals, const INTEGER nfmax, REAL gopt[])
+lsrch(tolmin_objective fg, void* ctx, const INTEGER n, REAL x[], REAL g[],
+      const REAL d[], REAL xs[], REAL gs[], const REAL relacc,
+      const REAL stepcb, const REAL ddotg, REAL* f, REAL* step,
+      INTEGER* nfvals, const INTEGER nfmax, REAL gopt[])
 {
   INTEGER i, icount;
   REAL ddotgb, dgknot, relint, stphgh, stpmin, stplow, stpopt, ratio;
@@ -1199,7 +1201,7 @@ lsrch(const INTEGER n, REAL x[], REAL g[], const REAL d[], REAL xs[],
   for (i = 1; i <= n; ++i) {
     X(i) = XS(i) + *step * D(i);
   }
-  *f = fgcalc(n, x, g);
+  *f = fg(ctx, x, g);
   ++icount;
   dgmid = 0.0;
   for (i = 1; i <= n; ++i) {
@@ -1379,14 +1381,14 @@ zbfgs(const INTEGER n, const REAL x[], const INTEGER nact, const REAL g[],
 
 
 static void
-minfun(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
-       const REAL b[], const REAL xl[], const REAL xu[], REAL x[],
-       const REAL acc, INTEGER iact[], INTEGER* nact, REAL par[],
-       const INTEGER iprint, INTEGER* info, REAL g[], REAL z[], REAL u[],
-       REAL xbig[], const REAL relacc, REAL* zznorm, const REAL tol,
-       const INTEGER meql, const INTEGER mtot, INTEGER* iterc,
-       INTEGER* nfvals, const INTEGER nfmax, REAL reskt[], REAL bres[],
-       REAL d[], REAL ztg[], REAL gm[], REAL xs[], REAL gs[])
+minfun(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
+       const REAL a[], const INTEGER ia, const REAL b[], const REAL xl[],
+       const REAL xu[], REAL x[], const REAL acc, INTEGER iact[],
+       INTEGER* nact, REAL par[], const INTEGER iprint, INTEGER* info,
+       REAL g[], REAL z[], REAL u[], REAL xbig[], const REAL relacc,
+       REAL* zznorm, const REAL tol, const INTEGER meql, const INTEGER mtot,
+       INTEGER* iterc, INTEGER* nfvals, const INTEGER nfmax, REAL reskt[],
+       REAL bres[], REAL d[], REAL ztg[], REAL gm[], REAL xs[], REAL gs[])
 {
   static REAL f; /* FIXME: static? */
   INTEGER i, k, indxbd, iterk, iterp, msat;
@@ -1400,7 +1402,7 @@ minfun(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   msat = mtot;
   iterk = *iterc;
   if (*nfvals == 0 || *info == 1) {
-    f = fgcalc(n, x, g);
+    f = fg(ctx, x, g);
     ++(*nfvals);
   }
   fprev = abs(f + f + 1.0);
@@ -1461,8 +1463,8 @@ minfun(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   /* Calculate the step along the search direction. */
  L40:
   ++(*iterc);
-  lsrch(n, x, g, d, xs, gs, relacc, stepcb, ddotg, &f, &step, nfvals, nfmax,
-        bres);
+  lsrch(fg, ctx, n, x, g, d, xs, gs, relacc, stepcb, ddotg, &f, &step,
+        nfvals, nfmax, bres);
   if (step == 0.0) {
     *info = 3;
     sum = 0.0;
@@ -1881,12 +1883,12 @@ eqcons(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
 
 
 static void
-minflc(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
-       const INTEGER ia, const REAL b[], const REAL xl[], const REAL xu[],
-       REAL x[], const REAL acc, INTEGER iact[], INTEGER* nact, REAL par[],
-       const INTEGER iprint, INTEGER* info, REAL g[], REAL z[], REAL u[],
-       REAL xbig[], REAL reskt[], REAL bres[], REAL d[], REAL ztg[],
-       REAL gm[], REAL xs[], REAL gs[])
+minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
+       const INTEGER meq, const REAL a[], const INTEGER ia, const REAL b[],
+       const REAL xl[], const REAL xu[], REAL x[], const REAL acc,
+       INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
+       INTEGER* info, REAL g[], REAL z[], REAL u[], REAL xbig[], REAL reskt[],
+       REAL bres[], REAL d[], REAL ztg[], REAL gm[], REAL xs[], REAL gs[])
 {
   INTEGER i, k, mp, meql, msat, mtot, iterc, nfmax, nfvals;
   REAL relacc, tol, zznorm;
@@ -1989,9 +1991,9 @@ minflc(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
 
   /* Minimize the objective function in the case when constraints are
    *   treated as degenerate if their residuals are less than TOL. */
-  minfun(n, m, a, ia, b, xl, xu, x, acc, iact, nact, par, iprint, info,
-         g, z, u, xbig, relacc, &zznorm, tol, meql, mtot, &iterc, &nfvals,
-         nfmax, reskt, bres, d, ztg, gm, xs, gs);
+  minfun(fg, ctx, n, m, a, ia, b, xl, xu, x, acc, iact, nact, par, iprint,
+         info, g, z, u, xbig, relacc, &zznorm, tol, meql, mtot, &iterc,
+         &nfvals, nfmax, reskt, bres, d, ztg, gm, xs, gs);
 
   /* Reduce TOL if necessary. */
   if (tol > relacc && *nact > 0) {
@@ -2161,10 +2163,11 @@ minflc(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
  *    or any of the components of X(.).
  */
 void
-getmin(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
-       const INTEGER ia, const REAL b[], const REAL xl[], const REAL xu[],
-       REAL x[], const REAL acc, INTEGER iact[], INTEGER* nact, REAL par[],
-       const INTEGER iprint, INTEGER* info, REAL w[])
+getmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
+       const INTEGER meq, const REAL a[], const INTEGER ia, const REAL b[],
+       const REAL xl[], const REAL xu[], REAL x[], const REAL acc,
+       INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
+       INTEGER* info, REAL w[])
 {
   INTEGER id, ig, iu, iz, igm, igs, ixs, iztg, ixbig, ibres;
   INTEGER ireskt;
@@ -2183,9 +2186,9 @@ getmin(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
   igs = ixs + n;
 
   /* Call the optimization package. */
-  minflc(n, m, meq, a, ia, b, xl, xu, x, acc, iact, nact, par, iprint, info,
-         &W(ig), &W(iz), &W(iu), &W(ixbig), &W(ireskt), &W(ibres), &W(id),
-         &W(iztg), &W(igm), &W(ixs), &W(igs));
+  minflc(fg, ctx, n, m, meq, a, ia, b, xl, xu, x, acc, iact, nact, par,
+         iprint, info, &W(ig), &W(iz), &W(iu), &W(ixbig), &W(ireskt),
+         &W(ibres), &W(id), &W(iztg), &W(igm), &W(ixs), &W(igs));
 }
 
 static REAL pow8(REAL x)
@@ -2203,7 +2206,7 @@ static REAL pow9(REAL x)
 }
 
 REAL
-fgcalc(const INTEGER n, const REAL x[], REAL g[])
+fgcalc(void* ctx, const REAL x[], REAL g[])
 {
   REAL wa, wb, wc, f;
 
@@ -2283,10 +2286,10 @@ int main(int argc, char* argv[])
     fprintf(OUTPUT, "\n\n     CALL OF GETMIN WITH  "
             "ACC =%11.4E  AND  IPRINT =%3ld\n",
             (double)acc, (long)iprint);
-    getmin(n, m, meq, a, ia, b, xl, xu, x, acc, iact, &nact, par,
-           iprint, &info, w);
+    getmin(fgcalc, NULL, n, m, meq, a, ia, b, xl, xu, x, acc, iact,
+           &nact, par, iprint, &info, w);
     fprintf(OUTPUT, "\n     RETURN FROM TOLMIN WITH INFO =%2d\n", (int)info);
-    f = fgcalc(n, x, w);
+    f = fgcalc(NULL, x, w);
     fprintf(OUTPUT, "\n     FINAL VALUE OF OBJECTIVE FUNCTION =%20.12E\n",
             (double)f);
     fprintf(OUTPUT, "\n     FINAL COMPONENTS OF X =\n\n");
