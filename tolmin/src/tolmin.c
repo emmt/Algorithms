@@ -446,7 +446,6 @@ delcon(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   ipiv = 0;
   izbd = 0;
 
-  /* Function Body */
   nm = *nact - 1;
   if (idrop == *nact) {
     goto L60;
@@ -549,7 +548,6 @@ sdirn(const INTEGER n, const INTEGER nact, const REAL z[], REAL d[],
   INTEGER i, j, np, iz;
   REAL sum, temp, sumabs;
 
-  /* Function Body */
   *ddotgm = 0.0;
   if (nact >= n) {
     goto L60;
@@ -619,7 +617,6 @@ sdegen(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   idrop = 0;
   itest = 0;
 
-  /* Function Body */
   mp = meql + 1;
   dtest = 0.0;
 
@@ -910,7 +907,6 @@ conres(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   INTEGER i, j, k, kl, jm, idiff, mdeg, msatk;
   REAL ddotg, res, sum, resabs, temp;
 
-  /* Function Body */
   idiff = mtot - *msat;
 
   /* Calculate and partition the residuals of the inactive constraints,
@@ -1050,7 +1046,6 @@ ktvec(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   /* FIXME: Fix uninitialized variables. */
   ssqktw = 0.0;
 
-  /* Function Body */
   for (i = 1; i <= n; ++i) {
     RESKT(i) = G(i);
   }
@@ -1199,13 +1194,13 @@ lsrch(tolmin_objective fg, void* ctx, const INTEGER n, REAL x[], REAL g[],
   /* Calculate another function and gradient value. */
  L20:
   for (i = 1; i <= n; ++i) {
-    X(i) = XS(i) + *step * D(i);
+    X(i) = XS(i) + (*step)*D(i);
   }
   *f = fg(ctx, x, g);
   ++icount;
   dgmid = 0.0;
   for (i = 1; i <= n; ++i) {
-    dgmid += D(i) * G(i);
+    dgmid += D(i)*G(i);
   }
   if (*f <= fopt) {
     if (*f < fopt || abs(dgmid) < dgopt) {
@@ -1222,8 +1217,8 @@ lsrch(tolmin_objective fg, void* ctx, const INTEGER n, REAL x[], REAL g[],
   }
 
   /* Modify the bounds on the steplength or convergence. */
-  if (*f >= fbase + (*step - sbase) * 0.1 * ddotgb) {
-    if (stphgh > 0.0 || *f > fbase || dgmid > ddotg * 0.5) {
+  if (*f >= fbase + (*step - sbase)*0.1*ddotgb) {
+    if (stphgh > 0.0 || *f > fbase || dgmid > ddotg*0.5) {
       stphgh = *step;
       fhgh = *f;
       dghgh = dgmid;
@@ -1233,14 +1228,14 @@ lsrch(tolmin_objective fg, void* ctx, const INTEGER n, REAL x[], REAL g[],
     fbase = *f;
     ddotgb = dgmid;
   }
-  if (dgmid >= ddotgb * 0.7) {
+  if (dgmid >= ddotgb*0.7) {
     goto L70;
   }
   stplow = *step;
   flow = *f;
   dglow = dgmid;
  L60:
-  if (stphgh > 0.0 && stplow >= relint * stphgh) {
+  if (stphgh > 0.0 && stplow >= relint*stphgh) {
     goto L70;
   }
 
@@ -1260,7 +1255,7 @@ lsrch(tolmin_objective fg, void* ctx, const INTEGER n, REAL x[], REAL g[],
     if (dgknot >= 0.0) {
       ratio = max(0.1, dglow*0.5/(dglow - dgknot));
     } else {
-      ratio = (dghgh * 0.5 - dgknot)/(dghgh - dgknot);
+      ratio = (dghgh*0.5 - dgknot)/(dghgh - dgknot);
     }
     *step = stplow + ratio*(stphgh - stplow);
     goto L20;
@@ -1277,7 +1272,7 @@ lsrch(tolmin_objective fg, void* ctx, const INTEGER n, REAL x[], REAL g[],
     *step = stpopt;
     *f = fopt;
     for (i = 1; i <= n; ++i) {
-      X(i) = XS(i) + *step * D(i);
+      X(i) = XS(i) + (*step)*D(i);
       G(i) = GOPT(i);
     }
   }
@@ -1323,8 +1318,8 @@ zbfgs(const INTEGER n, const REAL x[], const INTEGER nact, const REAL g[],
     ZTG(k) = temp;
     iz = k;
     for (i = 1; i <= n; ++i) {
-      temp = wcos * Z(iz+1) - wsin * Z(iz);
-      Z(iz) = wcos * Z(iz) + wsin * Z(iz+1);
+      temp = wcos*Z(iz+1) - wsin*Z(iz);
+      Z(iz) = wcos*Z(iz) + wsin*Z(iz+1);
       Z(iz+1) = temp;
       iz += n;
     }
@@ -1335,7 +1330,7 @@ zbfgs(const INTEGER n, const REAL x[], const INTEGER nact, const REAL g[],
   if (*zznorm < 0.0) {
     *zznorm = dd/dg;
   } else {
-    temp = sqrt(*zznorm * dd/dg);
+    temp = sqrt(*zznorm*dd/dg);
     *zznorm = min(*zznorm, temp);
     *zznorm = max(*zznorm, temp*0.1);
   }
@@ -1354,14 +1349,14 @@ zbfgs(const INTEGER n, const REAL x[], const INTEGER nact, const REAL g[],
       temp = 0.0;
       iz = k;
       for (i = 1; i <= n; ++i) {
-        temp += GS(i) * Z(iz);
+        temp += GS(i)*Z(iz);
         iz += n;
       }
       temp /= dg;
       sum = 0.0;
       iz = k;
       for (i = 1; i <= n; ++i) {
-        Z(iz) -= temp * XS(i);
+        Z(iz) -= temp*XS(i);
         sum += pow2(Z(iz));
         iz += n;
       }
@@ -1369,7 +1364,7 @@ zbfgs(const INTEGER n, const REAL x[], const INTEGER nact, const REAL g[],
         temp = sqrt(*zznorm/sum);
         iz = k;
         for (i = 1; i <= n; ++i) {
-          Z(iz) = temp * Z(iz);
+          Z(iz) = temp*Z(iz);
           iz += n;
         }
       }
@@ -1423,7 +1418,7 @@ minfun(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
         &ssqkt, xs, gs);
 
   /* Test for convergence. */
-  if (ssqkt <= acc * acc) {
+  if (ssqkt <= acc*acc) {
     *info = 1;
     goto L70;
   }
@@ -1469,9 +1464,9 @@ minfun(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
     *info = 3;
     sum = 0.0;
     for (i = 1; i <= n; ++i) {
-      sum += abs(D(i) * GS(i));
+      sum += abs(D(i)*GS(i));
     }
-    if (ddotg + relacc * sum >= 0.0) {
+    if (ddotg + relacc*sum >= 0.0) {
       *info = 2;
     }
     goto L70;
@@ -1546,7 +1541,6 @@ satact(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   savex = 0;
   jx = 0;
 
-  /* Function Body */
   if (*nact == 0) {
     goto L50;
   }
@@ -1635,7 +1629,6 @@ adjtol(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
 
   /* Set VIOL to the greatest relative constraint residual of the first
    *   NACT constraints. */
-  /* Function Body */
   viol = 0.0;
   if (nact > meql) {
     kl = meql + 1;
@@ -1693,7 +1686,6 @@ getfes(const INTEGER n, const INTEGER m, const REAL a[], const INTEGER ia,
   /* FIXME: Fix uninitialized variables. */
   itest = 0;
 
-  /* Function Body */
   *info = 0;
  L10:
   satact(n, m, a, ia, b, xl, xu, x, iact, nact, info, z, u, xbig, relacc,
@@ -1820,16 +1812,14 @@ eqcons(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
   REAL rhs, sum, vmult;
   REAL sumabs;
 
-
   /* Try to add the next equality constraint to the active set. */
-  /* Function Body */
   for (keq = 1; keq <= meq; ++keq) {
     if (*meql < n) {
       np = *meql + 1;
       IACT(np) = keq;
       addcon(n, m, a, ia, iact, meql, z, u, relacc, np, am, cgrad);
       if (*meql == np) {
-        goto L50;
+        continue;
       }
     }
 
@@ -1841,44 +1831,36 @@ eqcons(const INTEGER n, const INTEGER m, const INTEGER meq, const REAL a[],
       for (i = 1; i <= n; ++i) {
         AM(i) = A(i,keq);
       }
-      k = *meql;
-    L20:
-      vmult = 0.0;
-      iz = k;
-      for (i = 1; i <= n; ++i) {
-        vmult += Z(iz)*AM(i);
-        iz += n;
-      }
-      vmult *= U(k);
-      j = IACT(k);
-      if (j <= m) {
+      for (k = *meql; k >= 1; --k) {
+        vmult = 0.0;
+        iz = k;
         for (i = 1; i <= n; ++i) {
-          AM(i) -= vmult*A(i,j);
+          vmult += Z(iz)*AM(i);
+          iz += n;
         }
-        rhs = B(j);
-      } else {
-        jm = j - m - n;
-        AM(jm) -= vmult;
-        rhs = XU(jm);
-      }
-      sum -= rhs*vmult;
-      sumabs += abs(rhs*vmult);
-      --k;
-      if (k >= 1) {
-        goto L20;
+        vmult *= U(k);
+        j = IACT(k);
+        if (j <= m) {
+          for (i = 1; i <= n; ++i) {
+            AM(i) -= vmult*A(i,j);
+          }
+          rhs = B(j);
+        } else {
+          jm = j - m - n;
+          AM(jm) -= vmult;
+          rhs = XU(jm);
+        }
+        sum -= rhs*vmult;
+        sumabs += abs(rhs*vmult);
       }
     }
 
     /* Error return if the constraints are inconsistent. */
     if (abs(sum) > relacc*sumabs) {
       *info = 5;
-      goto L60;
+      break;
     }
-  L50:
-    ;
   }
- L60:
-  return;
 }
 
 
@@ -2167,24 +2149,20 @@ tolmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
        INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
        INTEGER nfmax, REAL w[])
 {
-  INTEGER id, ig, iu, iz, igm, igs, ixs, iztg, ixbig, ibres;
-  INTEGER ireskt;
-
   /* Partition the workspace array. */
-  ig = 1;
-  ireskt = ig + n;
-  iz = ireskt + n;
-  iu = iz + n*n;
-  ixbig = iu + n;
-  ibres = ixbig + n;
-  id = ibres + m + n + n;
-  iztg = id + n;
-  igm = iztg + n;
-  ixs = igm + n;
-  igs = ixs + n;
+  REAL* g = w;
+  REAL* reskt = g + n;
+  REAL* z = reskt + n;
+  REAL* u = z + n*n;
+  REAL* xbig = u + n;
+  REAL* bres = xbig + n;
+  REAL* d = bres + m + n + n;
+  REAL* ztg = d + n;
+  REAL* gm = ztg + n;
+  REAL* xs = gm + n;
+  REAL* gs = xs + n;
 
   /* Call the optimization package. */
   return minflc(fg, ctx, n, m, meq, a, ia, b, xl, xu, x, acc, iact, nact, par,
-                iprint, nfmax, &W(ig), &W(iz), &W(iu), &W(ixbig), &W(ireskt),
-                &W(ibres), &W(id), &W(iztg), &W(igm), &W(ixs), &W(igs));
+                iprint, nfmax, g, z, u, xbig, reskt, bres, d, ztg, gm, xs, gs);
 }
