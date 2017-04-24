@@ -29,12 +29,14 @@ default:
 tolmin-f2c: $(F2COBJECTS)
 	$(CC) $^ -o $@ $(F2CLIBS) -lm
 
-tolmin.o: tolmin.c
+tolmin.o: tolmin.c tolmin.h
 
-tolmin: tolmin.o
+tolmin-test.o: tolmin-test.c tolmin.h
+
+tolmin-test: tolmin-test.o tolmin.o
 	$(CC) $^ -o $@ -lm
 
-output.txt: tolmin
+output.txt: tolmin-test
 	./$< | $(FILTER) >$@
 
 output-f2c.txt: tolmin-f2c
@@ -47,4 +49,4 @@ clean:
 	$(RM) *~ *.o
 
 veryclean: clean
-	$(RM) $(F2CSOURCES)
+	$(RM) $(F2CSOURCES) tolmin-test
