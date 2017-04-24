@@ -36,6 +36,8 @@ tolmin-test.o: tolmin-test.c tolmin.h
 tolmin-test: tolmin-test.o tolmin.o
 	$(CC) $^ -o $@ -lm
 
+tolmin-wrap.o: tolmin-wrap.c tolmin.h
+
 output.txt: tolmin-test
 	./$< | $(FILTER) >$@
 

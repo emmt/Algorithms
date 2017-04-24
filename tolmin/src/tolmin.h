@@ -21,9 +21,6 @@ extern "C" {
 
   /* FORTRAN WRAPPER */
 
-  extern void fgcalc_(const INTEGER *n, const REAL *x, REAL *f, REAL *g);
-
-
   /* This is the entry point to a package of subroutines that calculate the
    *    the least value of a differentiable function of several variables
    *    subject to linear constraints on the values of the variables, using

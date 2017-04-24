@@ -34,11 +34,10 @@
  *    version for the provided example).
  *  - Pass objective function as argument.
  *  - Rename GETMIN as TOLMIN.
+ *  - Write FORTRAN wrapper with the same syntax as the original code.
  *
  * Things to do:
- *  - Use 2 workspaces, one for integers, one for reals.
  *  - Define status constants and related messages.
- *  - Write FORTRAN wrapper with the same syntax as the original code.
  *  - Cleanup goto statements.
  */
 
