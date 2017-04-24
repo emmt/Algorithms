@@ -12,7 +12,7 @@ extern "C" {
 
   typedef REAL tolmin_objective(void* ctx, const REAL x[], REAL g[]);
 
-  extern void getmin(tolmin_objective fg, void* ctx, const INTEGER n,
+  extern void tolmin(tolmin_objective fg, void* ctx, const INTEGER n,
                      const INTEGER m, const INTEGER meq, const REAL a[],
                      const INTEGER ia, const REAL b[], const REAL xl[],
                      const REAL xu[], REAL x[], const REAL acc,

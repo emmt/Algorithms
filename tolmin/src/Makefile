@@ -14,7 +14,7 @@ F2COBJECTS = $(F2CSOURCES:.c=.o)
 # notation for floating-point number from C to FORTRAN.  Just use `cat` if
 # no conversion is needed.
 #
-# FILTER = sed 's/\([0-9]\)[eE]\([-+]\?[0-9]\)/\1D\2/g'
+# FILTER = sed 's/\([0-9]\)[eE]\([-+]\?[0-9]\)/\1D\2/g;s/GETMIN/TOLMIN/g'
 FILTER = cat
 
 default:

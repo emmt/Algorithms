@@ -33,9 +33,9 @@
  *    with IPRINT=-1 are identical between the original FORTRAN code and the C
  *    version for the provided example).
  *  - Pass objective function as argument.
+ *  - Rename GETMIN as TOLMIN.
  *
  * Things to do:
- *  - Rename GETMIN as TOLMIN.
  *  - Use 2 workspaces, one for integers, one for reals.
  *  - Define status constants and related messages.
  *  - Write FORTRAN wrapper with the same syntax as the original code.
@@ -1906,7 +1906,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   *info = 4;
   if (max(max(1 - n, -m), meq*(meq - m)) > 0) {
     if (iprint != 0) {
-      fprintf(OUTPUT, "\n     ERROR RETURN FROM GETMIN BECAUSE %s\n",
+      fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "A CONDITION ON N, M OR MEQ IS VIOLATED");
     }
     goto L40;
@@ -1918,7 +1918,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   tol = max(0.01, 10.0*relacc);
   if (*info == 4) {
     if (iprint != 0) {
-      fprintf(OUTPUT, "\n     ERROR RETURN FROM GETMIN BECAUSE %s\n",
+      fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "A LOWER BOUND EXCEEDS AN UPPER BOUND");
     }
     goto L40;
@@ -1929,7 +1929,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
     eqcons(n, m, meq, a, ia, b, xu, iact, &meql, info, z, u, relacc, xs, gs);
     if (*info == 5) {
       if (iprint != 0) {
-        fprintf(OUTPUT, "\n     ERROR RETURN FROM GETMIN BECAUSE %s\n",
+        fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
                 "THE EQUALITY CONSTRAINTS ARE INCONSISTENT");
       }
       goto L40;
@@ -1953,7 +1953,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
          relacc, &tol, meql, &msat, mtot, bres, d, ztg, gm, reskt, xs, gs);
   if (msat < mtot) {
     if (iprint != 0) {
-      fprintf(OUTPUT, "\n     ERROR RETURN FROM GETMIN BECAUSE %s\n",
+      fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "THE EQUALITIES AND BOUNDS ARE INCONSISTENT");
     }
     *info = 6;
@@ -1975,7 +1975,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
          relacc, &tol, meql, &msat, mtot, bres, d, ztg, gm, reskt, xs, gs);
   if (msat < mtot) {
     if (iprint != 0) {
-      fprintf(OUTPUT, "\n     ERROR RETURN FROM GETMIN BECAUSE %s\n",
+      fprintf(OUTPUT, "\n     ERROR RETURN FROM TOLMIN BECAUSE %s\n",
               "THE CONSTRAINTS ARE INCONSISTENT");
     }
     *info = 7;
@@ -1983,7 +1983,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   } else if (meql == n) {
     if (iprint != 0) {
       fprintf(OUTPUT, "\n     %s\n",
-              "GETMIN FINDS THAT THE VARIABLES ARE DETERMINED "
+              "TOLMIN FINDS THAT THE VARIABLES ARE DETERMINED "
               "BY THE EQUALITY CONSTRAINTS");
     }
     goto L40;
@@ -2007,21 +2007,21 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
   if (iprint != 0) {
     if (*info == 1) {
       fprintf(OUTPUT, "\n     %s\n",
-              "GETMIN HAS ACHIEVED THE REQUIRED ACCURACY");
+              "TOLMIN HAS ACHIEVED THE REQUIRED ACCURACY");
     }
     if (*info == 2) {
       fprintf(OUTPUT, "\n     %s\n",
-              "GETMIN CAN MAKE NO FURTHER PROGRESS BECAUSE "
+              "TOLMIN CAN MAKE NO FURTHER PROGRESS BECAUSE "
               "OF ROUNDING ERRORS");
     }
     if (*info == 3) {
       fprintf(OUTPUT, "\n     %s\n",
-              "GETMIN CAN MAKE NO FURTHER PROGRESS BECAUSE "
+              "TOLMIN CAN MAKE NO FURTHER PROGRESS BECAUSE "
               "F WILL NOT DECREASE ANY MORE");
     }
     if (*info == 8) {
       fprintf(OUTPUT, "\n     %s\n",
-              "GETMIN HAS REACHED THE GIVEN LIMIT ON "
+              "TOLMIN HAS REACHED THE GIVEN LIMIT ON "
               "THE NUMBER OF CALLS OF FGCALC");
     }
   }
@@ -2065,7 +2065,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  *    estimates, and there is no need for X(.) to be feasible initially.
  *    These variables are adjusted automatically and the values that give
  *    the least feasible calculated value of the objective function are
- *    available in X(.) on the return from GETMIN.
+ *    available in X(.) on the return from TOLMIN.
  * ACC is a tolerance on the first order conditions at the calculated
  *    solution of the optimization problem.  These first order conditions
  *    state that, if X(.) is a solution, then there is a set of active
@@ -2096,7 +2096,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  * NACT is set automatically to the integer variable of this ilk that has
  *    been introduced already.
  * PAR(.) is a one-dimensional array that will hold the Lagrange
- *    multipliers PAR(K) K=1(1)NACT on the return from GETMIN, these
+ *    multipliers PAR(K) K=1(1)NACT on the return from TOLMIN, these
  *    parameters being defined in the above paragraph on ACC.  The length
  *    of PAR should be at least N.
  * IPRINT must be set by the user to specify the frequency of printing
@@ -2113,7 +2113,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  *    unless the user wishes to impose an upper bound on the number of
  *    evaluations of the objective function and its gradient, in which
  *    case INFO should be set to the value of this bound.  On the exit
- *    from GETMIN it will have one of the following integer values to
+ *    from TOLMIN it will have one of the following integer values to
  *    indicate the reason for leaving the optimization package:
  *         INFO=1   X(.) is feasible and the condition that depends on
  *    ACC is satisfied.
@@ -2150,7 +2150,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  * Note 1.   The variables N, M, MEQ, IA, ACC and IPRINT and the elements
  *    of the arrays A(,.,), B(.), XL(.) and XU(.) are not altered by the
  *    optimization procedure.  Their values, the value of INFO and the
- *    initial components of X(.) must be set on entry to GETMIN.
+ *    initial components of X(.) must be set on entry to TOLMIN.
  * Note 2.   Of course the package needs the objective function and its
  *    gradient.  Therefore the user must provide a subroutine called
  *    FGCALC, its first two lines being
@@ -2163,7 +2163,7 @@ minflc(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
  *    or any of the components of X(.).
  */
 void
-getmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
+tolmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
        const INTEGER meq, const REAL a[], const INTEGER ia, const REAL b[],
        const REAL xl[], const REAL xu[], REAL x[], const REAL acc,
        INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
@@ -2283,10 +2283,10 @@ int main(int argc, char* argv[])
 
     /* Call the optimization package. */
     info = 0;
-    fprintf(OUTPUT, "\n\n     CALL OF GETMIN WITH  "
+    fprintf(OUTPUT, "\n\n     CALL OF TOLMIN WITH  "
             "ACC =%11.4E  AND  IPRINT =%3ld\n",
             (double)acc, (long)iprint);
-    getmin(fgcalc, NULL, n, m, meq, a, ia, b, xl, xu, x, acc, iact,
+    tolmin(fgcalc, NULL, n, m, meq, a, ia, b, xl, xu, x, acc, iact,
            &nact, par, iprint, &info, w);
     fprintf(OUTPUT, "\n     RETURN FROM TOLMIN WITH INFO =%2d\n", (int)info);
     f = fgcalc(NULL, x, w);
