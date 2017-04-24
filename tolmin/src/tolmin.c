@@ -2147,7 +2147,7 @@ tolmin(tolmin_objective fg, void* ctx, const INTEGER n, const INTEGER m,
        const INTEGER meq, const REAL a[], const INTEGER ia, const REAL b[],
        const REAL xl[], const REAL xu[], REAL x[], const REAL acc,
        INTEGER iact[], INTEGER* nact, REAL par[], const INTEGER iprint,
-       INTEGER nfmax, REAL w[])
+       const INTEGER nfmax, REAL w[])
 {
   /* Partition the workspace array. */
   REAL* g = w;

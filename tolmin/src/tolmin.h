@@ -17,7 +17,7 @@ extern "C" {
                     const INTEGER ia, const REAL b[], const REAL xl[],
                     const REAL xu[], REAL x[], const REAL acc,
                     INTEGER iact[], INTEGER* nact, REAL par[],
-                    const INTEGER iprint, INTEGER nfmax, REAL w[]);
+                    const INTEGER iprint, const INTEGER nfmax, REAL w[]);
 
   /* FORTRAN WRAPPER */
 
