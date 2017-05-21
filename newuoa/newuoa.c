@@ -159,7 +159,6 @@ newuoa_test(void)
   }
 } /* newuoa_test */
 
-
 /* The Chebyquad test problem (Fletcher, 1965) for N = 2,4,6 and 8,
    with NPT = 2N+1. */
 static REAL
@@ -408,7 +407,7 @@ newuoa_create(const INTEGER n, const INTEGER npt,
     }
     return NULL;
   }
-  if (rhobeg <= rhoend || rhoend <= 0) {
+  if (rhoend <= 0 || rhoend > rhobeg) {
     if (iprint > 0) {
       print_error("invalid RHOBEG and/or RHOEND");
     }
