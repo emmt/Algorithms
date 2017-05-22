@@ -12,11 +12,11 @@ CFLAGS = ${STRICT} -Wall -O2 -I. -DNDEBUG
 FFLAGS = ${CFLAGS}
 LDFLAGS =
 
-# Command and flags to build a static libarry:
+# Command and flags to build a static library:
 AR = ar
 ARFLAGS = rv
 
-# Set the following to true/false depending whetehr your terminal does support
+# Set the following to true/false depending whether your terminal does support
 # ANSI colors.
 COLOR = true
 
