@@ -12,6 +12,9 @@ The following licenses apply to the code in this repository:
 * Copyright (C) 2013, Mike J. D. Powell: NEWUOA algorithm in FORTRAN released
   under the GNU Lesser General Public License.
 
+* Copyright (C) 2013, Mike J. D. Powell: LINCOA algorithm in FORTRAN released
+  under the GNU Lesser General Public License.
+
 * Copyright (C) 2011, Jorge Nocedal & Jose Luis Morales: L-BFGS-B algorithm in
   FORTRAN released under the "New BSD License".
 
