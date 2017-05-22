@@ -44,6 +44,7 @@ If you have bound constraints, you may consider using BOBYQA instead.
 A [Yorick](http://yorick.github.com/) interface is also provided in
 directory [`newuoa/yorick`](./newuoa/yorick).
 
+
 ## BOBYQA
 
 Directory [`bobyqa`](bobyqa) provides a C implementation of Mike Powell's
@@ -63,6 +64,22 @@ variables).  The recommended number of points for building the quadratic
 model is `2*N+1`.  For smooth objective functions, BOBYQA is expected to be
 more efficient than COBYLA (which exploits a more simple linear model but
 implements arbitrary inequality constraints).
+
+
+## LINCOA
+
+Directory [`lincoa/src`](lincoa/src) provides a C implementation of Mike
+Powell's LINCOA algorithm for minimizing a function of many variables subject
+to linear constraints.  The algorithm is described in:
+
+> M.J.D. Powell, "On fast trust region methods for quadratic models with
+> linear constraints", Report of the Department of Applied Mathematics and
+> Theoretical Physics, Cambridge University, DAMTP 2014/NA02 (2014).
+
+The present code is based on the original FORTRAN version written by Mike
+Powell who released his code under the GNU Lesser General Public License.  His
+original code is available at
+[CCPForge](https://ccpforge.cse.rl.ac.uk/gf/project/powell/).
 
 
 ## L-BFGS-B
