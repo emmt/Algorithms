@@ -66,15 +66,30 @@ more efficient than COBYLA (which exploits a more simple linear model but
 implements arbitrary inequality constraints).
 
 
+## TOLMIN
+
+Directory [`tolmin/src`](tolmin/src) provides a C implementation of Mike
+Powell's TOLMIN algorithm for minimizing a function of many variables subject
+to linear and bound constraints.  The algorithm is described in:
+
+> M.J.D. Powell, "A tolerant algorithm for linearly constrained optimization
+> calculations", Math. Programming B, Vol. 45, pp. 547-566 (1989).
+
+The present code is based on the original FORTRAN version written by Mike
+Powell who released his code under the GNU Lesser General Public License.  His
+original code is available at
+[CCPForge](https://ccpforge.cse.rl.ac.uk/gf/project/powell/).
+
+
 ## LINCOA
 
 Directory [`lincoa/src`](lincoa/src) provides a C implementation of Mike
 Powell's LINCOA algorithm for minimizing a function of many variables subject
 to linear constraints.  The algorithm is described in:
 
-> M.J.D. Powell, "On fast trust region methods for quadratic models with
-> linear constraints", Report of the Department of Applied Mathematics and
-> Theoretical Physics, Cambridge University, DAMTP 2014/NA02 (2014).
+> M.J.D. Powell, "On fast trust region methods for quadratic models with linear
+> constraints", Report of the Department of Applied Mathematics and Theoretical
+> Physics, Cambridge University, DAMTP 2014/NA02 (2014).
 
 The present code is based on the original FORTRAN version written by Mike
 Powell who released his code under the GNU Lesser General Public License.  His
