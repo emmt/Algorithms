@@ -138,9 +138,6 @@ static const REAL TINY  = 1e-60;
 #define WB(i1)      wb[(i1)-1]
 
 
-/* Common data. */
-static REAL common_fmax;
-
 /*
  * The arguments N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM ,SP and STEP are
  *   identical to the corresponding arguments in SUBROUTINE LINCOB.
@@ -2554,6 +2551,10 @@ lincoa(const INTEGER n,
 
 #ifdef TESTING
 
+/* Variable used to store the fcuntion value when `x` is infeasible. */
+static REAL fmax;
+
+/* Objective function. */
 REAL
 objfun(const INTEGER n, const REAL x[], LOGICAL feasible, void* data)
 {
@@ -2567,24 +2568,24 @@ objfun(const INTEGER n, const REAL x[], LOGICAL feasible, void* data)
   v34 = X(7)*X(11) - X(10)*X(8);
   del1 = v23*X(12) - v24*X(9) + v34*X(6);
   if (del1 <= ZERO) {
-    return common_fmax;
+    return fmax;
   }
   del2 = -v34*X(3) - v13*X(12) + v14*X(9);
   if (del2 <= ZERO) {
-    return common_fmax;
+    return fmax;
   }
   del3 = -v14*X(6) + v24*X(3) + v12*X(12);
   if (del3 <= ZERO) {
-    return common_fmax;
+    return fmax;
   }
   del4 = -v12*X(9) + v13*X(6) - v23*X(3);
   if (del4 <= ZERO) {
-    return common_fmax;
+    return fmax;
   }
   temp = del1 + del2 + del3 + del4;
   temp = temp*(temp*temp)/(del1*del2*del3*del4);
   temp = temp/6.0;
-  f = min(temp,common_fmax);
+  f = min(temp,fmax);
   return f;
 }
 
@@ -2687,7 +2688,7 @@ int main(int argc, char* argv[])
     ss = max(ss, XP(j) + YP(j) + ZP(j));
   }
   temp = ss - xs - ys - zs;
-  common_fmax = temp*(temp*temp)/6.0;
+  fmax = temp*(temp*temp)/6.0;
   for (jcase = 1; jcase <= 6; ++jcase) {
     for (i = 2; i <= 8; ++i) {
       X(i) = ZERO;
