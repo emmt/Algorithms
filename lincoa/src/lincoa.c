@@ -32,10 +32,12 @@
  *  - Replace all FORTRAN i/o by calls to the standard C library (the outputs
  *    with IPRINT=-1 are identical between the original FORTRAN code and the C
  *    version for the provided example).
+ *  - Change workspace layout to accomodate to different sizes for integers and
+ *    reals.
+ *  - Pass objective function as argument.
  *
  * Things to do:
- *  - Pass objective function as argument.
- *  - Use 2 workspaces, one for integers, one for reals.
+ *  - Use reverse communication.
  *  - Define status constants and related messages.
  *  - Write FORTRAN wrapper with the same syntax as the original code.
  *  - Cleanup goto statements.
@@ -46,6 +48,9 @@
 #include <stdlib.h>
 #include "lincoa.h"
 
+/* Basic types. */
+#define INTEGER int     /* used for indexing */
+#define REAL    double  /* floating-point type */
 
 /* Where to print the results. */
 #define OUTPUT stdout
@@ -134,40 +139,6 @@ static const REAL TINY  = 1e-60;
 
 /* Common data. */
 static REAL common_fmax;
-
-REAL
-calfun(const INTEGER n, const REAL x[])
-{
-  REAL f, v12, v13, v14, v23, v24, v34, del1, del2, del3, del4, temp;
-
-  v12 = X(1)*X(5) - X(4)*X(2);
-  v13 = X(1)*X(8) - X(7)*X(2);
-  v14 = X(1)*X(11) - X(10)*X(2);
-  v23 = X(4)*X(8) - X(7)*X(5);
-  v24 = X(4)*X(11) - X(10)*X(5);
-  v34 = X(7)*X(11) - X(10)*X(8);
-  del1 = v23*X(12) - v24*X(9) + v34*X(6);
-  if (del1 <= ZERO) {
-    return common_fmax;
-  }
-  del2 = -v34*X(3) - v13*X(12) + v14*X(9);
-  if (del2 <= ZERO) {
-    return common_fmax;
-  }
-  del3 = -v14*X(6) + v24*X(3) + v12*X(12);
-  if (del3 <= ZERO) {
-    return common_fmax;
-  }
-  del4 = -v12*X(9) + v13*X(6) - v23*X(3);
-  if (del4 <= ZERO) {
-    return common_fmax;
-  }
-  temp = del1 + del2 + del3 + del4;
-  temp = temp*(temp*temp)/(del1*del2*del3*del4);
-  temp = temp/6.0;
-  f = min(temp,common_fmax);
-  return f;
-}
 
 /*
  * The arguments N, NPT, XPT, BMAT, ZMAT, IDZ, NDIM ,SP and STEP are
@@ -425,6 +396,8 @@ static void
 prelim(const INTEGER n,
        const INTEGER npt,
        const INTEGER m,
+       lincoa_objfun* objfun,
+       void* data,
        const REAL amat[],
        REAL b[],
        REAL x[],
@@ -589,8 +562,8 @@ prelim(const INTEGER n,
     for (j = 1; j <= n; ++j) {
       X(j) = XBASE(j) + XPT(nf,j);
     }
-    /* FIXME: used `f = feas;` */
-    f = calfun(n, x);
+    /* FIXME: useless code: `f = feas;` */
+    f = objfun(n, x, data);
     if (iprint == 3) {
       fprintf(OUTPUT,
               "    Function number %5ld"
@@ -1746,6 +1719,8 @@ static void
 lincob(const INTEGER n,
        const INTEGER npt,
        const INTEGER m,
+       lincoa_objfun* objfun,
+       void* data,
        const REAL amat[],
        REAL b[],
        REAL x[],
@@ -1796,8 +1771,8 @@ lincob(const INTEGER n,
    *   integer from [1,NPT], then a change is made to XPT(K,.) if necessary
    *   so that the constraint violation is at least 0.2*RHOBEG. Also KOPT
    *   is set so that XPT(KOPT,.) is the initial trust region centre. */
-  prelim(n, npt, m, amat, b, x, rhobeg, iprint, xbase, xpt, fval,
-         xsav, xopt, gopt, &kopt, hq, pq, bmat, zmat, &idz, ndim,
+  prelim(n, npt, m, objfun, data, amat, b, x, rhobeg, iprint, xbase, xpt,
+         fval, xsav, xopt, gopt, &kopt, hq, pq, bmat, zmat, &idz, ndim,
          sp, rescon, step, pqw, w);
 
   /* Begin the iterative procedure. */
@@ -2023,7 +1998,7 @@ lincob(const INTEGER n,
   if (nf > maxfun) {
     --nf;
     if (iprint > 0) {
-      fputs("Return from LINCOA because CALFUN has "
+      fputs("Return from LINCOA because objective function has "
             "been called MAXFUN times.\n", stderr);
     }
     goto L600;
@@ -2049,8 +2024,8 @@ lincob(const INTEGER n,
   if (ksave <= 0) {
     ifeas = 1;
   }
-  f = (REAL) ifeas; /* FIXME: ?!? */
-  f = calfun(n, x);
+  /* FIXME: useless code: `f = (REAL)ifeas;` */
+  f = objfun(n, x, data);
   if (iprint == 3) {
       fprintf(OUTPUT,
               "    Function number %5ld"
@@ -2467,6 +2442,8 @@ void
 lincoa(const INTEGER n,
        const INTEGER npt,
        const INTEGER m,
+       lincoa_objfun* objfun,
+       void* data,
        const REAL a[],
        const INTEGER ia,
        const REAL b[],
@@ -2480,7 +2457,7 @@ lincoa(const INTEGER n,
   REAL smallx, sum, temp;
   INTEGER i, j, np, iflag, nptm;
 
-  /* Check that N, NPT and MAXFUN are acceptable. */
+  /* Check that N, NPT, M and MAXFUN are acceptable. */
   smallx = rhoend*1e-6;
   np = n + 1;
   nptm = npt - np;
@@ -2491,6 +2468,10 @@ lincoa(const INTEGER n,
   if (npt < n + 2 || npt > (n + 2)*np/2) {
     fputs("Return from LINCOA because NPT is not in the required interval.\n",
           stderr);
+    return;
+  }
+  if (m < 0) {
+    fputs("Return from LINCOA because M is less than 0.\n", stderr);
     return;
   }
   if (maxfun <= npt) {
@@ -2564,10 +2545,48 @@ lincoa(const INTEGER n,
     }
 
     /* The above settings provide a partition of W for subroutine LINCOB. */
-    lincob(n, npt, m, amat, wb, x, rhobeg, rhoend, iprint, maxfun, xbase,
-           xpt, fval, xsav, xopt, gopt, hq, pq, bmat, zmat, ndim, step,
-           sp, xnew, iact, rescon, qfac, rfac, pqw, w);
+    lincob(n, npt, m, objfun, data, amat, wb, x, rhobeg, rhoend,
+           iprint, maxfun, xbase, xpt, fval, xsav, xopt, gopt,
+           hq, pq, bmat, zmat, ndim, step, sp, xnew, iact, rescon,
+           qfac, rfac, pqw, w);
   }
+}
+
+
+#ifdef TESTING
+
+REAL
+objfun(const INTEGER n, const REAL x[], void* data)
+{
+  REAL f, v12, v13, v14, v23, v24, v34, del1, del2, del3, del4, temp;
+
+  v12 = X(1)*X(5) - X(4)*X(2);
+  v13 = X(1)*X(8) - X(7)*X(2);
+  v14 = X(1)*X(11) - X(10)*X(2);
+  v23 = X(4)*X(8) - X(7)*X(5);
+  v24 = X(4)*X(11) - X(10)*X(5);
+  v34 = X(7)*X(11) - X(10)*X(8);
+  del1 = v23*X(12) - v24*X(9) + v34*X(6);
+  if (del1 <= ZERO) {
+    return common_fmax;
+  }
+  del2 = -v34*X(3) - v13*X(12) + v14*X(9);
+  if (del2 <= ZERO) {
+    return common_fmax;
+  }
+  del3 = -v14*X(6) + v24*X(3) + v12*X(12);
+  if (del3 <= ZERO) {
+    return common_fmax;
+  }
+  del4 = -v12*X(9) + v13*X(6) - v23*X(3);
+  if (del4 <= ZERO) {
+    return common_fmax;
+  }
+  temp = del1 + del2 + del3 + del4;
+  temp = temp*(temp*temp)/(del1*del2*del3*del4);
+  temp = temp/6.0;
+  f = min(temp,common_fmax);
+  return f;
 }
 
 
@@ -2683,7 +2702,7 @@ int main(int argc, char* argv[])
 
     /* Choose number of points and allocate workspace. */
     npt = jcase*5 + 10;
-    nbytes = lincoa_storage(n, m, npt);
+    nbytes = lincoa_storage(n, npt, m);
     ws = malloc(nbytes);
     if (ws == NULL) {
       fprintf(stderr, "cannot allocate %ld bytes for workspace\n",
@@ -2700,7 +2719,8 @@ int main(int argc, char* argv[])
     fprintf(OUTPUT,
           "\n\n    Output from LINCOA with  NPT =%4ld  and  RHOEND =%12.4E\n",
           (long)npt, (double)rhoend);
-    lincoa(n, npt, m, a, ia, b, x, rhobeg, rhoend, iprint, maxfun, ws);
+    lincoa(n, npt, m, objfun, NULL, a, ia, b, x,
+           rhobeg, rhoend, iprint, maxfun, ws);
 
     /* Free workspace. */
     free(ws);
@@ -2709,3 +2729,5 @@ int main(int argc, char* argv[])
   /* Return. */
   return 0;
 }
+
+#endif /* TESTING */
