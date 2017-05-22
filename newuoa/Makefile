@@ -12,7 +12,7 @@ CFLAGS = ${STRICT} -Wall -O2 -I. -DNDEBUG
 FFLAGS = ${CFLAGS}
 LDFLAGS =
 
-# Command and flags to build a static libarry:
+# Command and flags to build a static library:
 AR = ar
 ARFLAGS = rv
 
