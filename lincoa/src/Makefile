@@ -1,33 +1,77 @@
+.PHONY: clean test test-code test-f2c
 
+#---- Customizations begin here -----------------------------------------------
+
+# Compilers (only the C compiler is needed to build the library):
 CC = gcc
-CPPFLAGS = -I.
+FC = gfortran
+
+# Compiler and linker flags:
+#STRICT = -ansi -Wpedantic
+CPPFLAGS = -I. -DNDEBUG
 CFLAGS = -Wall -O2
+FFLAGS = ${CFLAGS}
+LDFLAGS =
+
+# Command and flags to build a static libarry:
+AR = ar
+ARFLAGS = rv
+
+# Set the following to true/false depending whetehr your terminal does support
+# ANSI colors.
+COLOR = true
+
+#---- Customization end here --------------------------------------------------
+
+srcdir=.
+TMPDIR = /tmp
+NAME = lincoa
+LIBNAME = lib${NAME}.a
 
 default:
 
-lincoa-f2c: lincoa-f2c.o lincoa.h
+test: test-code
+
+${NAME}-f2c: ${NAME}-f2c.o ${NAME}.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ -lf2c -lm
 
-lincoa-f2c.o: lincoa-f2c.c lincoa.h
+${NAME}-f2c.o: ${NAME}-f2c.c ${NAME}.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-lincoa.o: lincoa.c lincoa.h
+${NAME}.o: ${NAME}.c ${NAME}.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-lincoa-test: lincoa-test.o lincoa.h
+${NAME}-test: ${NAME}-test.o ${NAME}.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ -lm
 
-lincoa-test.o: lincoa.c lincoa.h
+${NAME}-test.o: ${NAME}.c ${NAME}.h
 	$(CC) -DTESTING=1 $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-lincoa-test.out: lincoa-test
+${NAME}-test.out: ${NAME}-test
 	./$< | sed 's/\([0-9]\)[eE]\([-+]\?[0-9]\)/\1D\2/g' >$@
 
-lincoa-f2c.out: lincoa-f2c
+test-code: ${NAME}-test.out ${srcdir}/../fortran/output.txt
+	@if diff $^ >${NAME}-test.diff; then \
+	    msg="test of C version successful"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;32m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
+	else \
+	    msg="test of C version failed (see file ${NAME}-test.diff)"; \
+	    if ${COLOR}; then \
+	        /bin/echo -e "\e[1;31m$${msg}\e[0;39;49m"; \
+	    else \
+	        echo "$${msg}"; \
+	    fi; \
+	fi
+
+${NAME}-f2c.out: ${NAME}-f2c
 	./$< | sed 's/\([0-9]\)[eE]\([-+]\?[0-9]\)/\1D\2/g' >$@
 
 test: output.txt
 	diff "$<" "../fortran/output.txt"
 
 clean:
-	rm -f *~ *.o lincoa-f2c lincoa
+	rm -f *~ *.o ${NAME}-f2c ${NAME}
