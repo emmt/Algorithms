@@ -21,7 +21,7 @@ ARFLAGS = rv
 # ANSI colors.
 COLOR = true
 
-#---- Customization end here --------------------------------------------------
+#---- Customizations end here -------------------------------------------------
 
 srcdir=.
 TMPDIR = /tmp
@@ -69,9 +69,6 @@ test-code: ${NAME}-test.out ${srcdir}/../fortran/output.txt
 
 ${NAME}-f2c.out: ${NAME}-f2c
 	./$< | sed 's/\([0-9]\)[eE]\([-+]\?[0-9]\)/\1D\2/g' >$@
-
-test: output.txt
-	diff "$<" "../fortran/output.txt"
 
 clean:
 	rm -f *~ *.o ${NAME}-f2c ${NAME}
