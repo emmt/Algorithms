@@ -49,6 +49,7 @@
 #include "lincoa.h"
 
 /* Basic types. */
+#define LOGICAL int     /* type for boolean value */
 #define INTEGER int     /* used for indexing */
 #define REAL    double  /* floating-point type */
 
@@ -562,8 +563,7 @@ prelim(const INTEGER n,
     for (j = 1; j <= n; ++j) {
       X(j) = XBASE(j) + XPT(nf,j);
     }
-    /* FIXME: useless code: `f = feas;` */
-    f = objfun(n, x, data);
+    f = objfun(n, x, (feas > ZERO), data);
     if (iprint == 3) {
       fprintf(OUTPUT,
               "    Function number %5ld"
@@ -2024,8 +2024,7 @@ lincob(const INTEGER n,
   if (ksave <= 0) {
     ifeas = 1;
   }
-  /* FIXME: useless code: `f = (REAL)ifeas;` */
-  f = objfun(n, x, data);
+  f = objfun(n, x, (ifeas > 0), data);
   if (iprint == 3) {
       fprintf(OUTPUT,
               "    Function number %5ld"
@@ -2556,7 +2555,7 @@ lincoa(const INTEGER n,
 #ifdef TESTING
 
 REAL
-objfun(const INTEGER n, const REAL x[], void* data)
+objfun(const INTEGER n, const REAL x[], LOGICAL feasible, void* data)
 {
   REAL f, v12, v13, v14, v23, v24, v34, del1, del2, del3, del4, temp;
 
