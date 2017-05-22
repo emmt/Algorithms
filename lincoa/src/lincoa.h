@@ -23,7 +23,20 @@ extern void lincoa(const INTEGER n,
                    const REAL rhoend,
                    const INTEGER iprint,
                    const INTEGER maxfun,
-                   REAL w[]);
+                   void* ws);
+
+/**
+ * Get the size of the workspace for LINCOA.
+ *
+ * @param n   the number of variables.
+ * @param npt the number of points.
+ * @param m   the number of constraints.
+ *
+ * @return The number of bytes needed by LINCOA workspace (assuming the first
+ *         bytes are correctly aligned for integers).
+ */
+extern size_t
+lincoa_storage(INTEGER n, INTEGER npt, INTEGER m);
 
 #if 0
 /* For the record, prototypes of the FORTRAN subroutines. */

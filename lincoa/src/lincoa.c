@@ -43,6 +43,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "lincoa.h"
 
 
@@ -66,12 +67,16 @@ static const REAL TINY  = 1e-60;
 #define min(a,b)          _min(typeof((a) + (b)), a, b)
 #define max(a,b)          _max(typeof((a) + (b)), a, b)
 #define clamp(x,lo,hi)    _clamp(typeof((x) + (lo) + (hi)), x, lo, hi)
+#define howmany(a,b)      _howmany(typeof((a) + (b)), a, b)
+#define roundup(a,b)      _roundup(typeof((a) + (b)), a, b)
 #define _abs(T,x)         ({ T _x = (x);  _x >= (T)0 ? _x : -_x; })
 #define _pow2(T,x)        ({ T _x = (x);  _x*_x; })
 #define _min(T,a,b)       ({ T _a = (a), _b = (b); _a < _b ? _a : _b; })
 #define _max(T,a,b)       ({ T _a = (a), _b = (b); _a > _b ? _a : _b; })
 #define _clamp(T,x,lo,hi) _min(T, _max(T, x, lo), hi)
 #define _sign(T,x,y)      ({ T _x = (x); (_x < 0) != ((y) < 0) ? -_x : _x; })
+#define _howmany(T,a,b)   ({ T _a = (a), _b = (b); ((_a + _b - 1)/_b); })
+#define _roundup(T,a,b)   ({ T _a = (a), _b = (b); ((_a + _b - 1)/_b)*_b; })
 
 
 /* A macro to print vectors (given their expression). */
@@ -124,6 +129,7 @@ static const REAL TINY  = 1e-60;
 #define YP(i1)      yp[(i1)-1]
 #define ZP(i1)      zp[(i1)-1]
 #define ZMAT(i1,i2) zmat[(i1)-1 + npt*((i2)-1)]
+#define WB(i1)      wb[(i1)-1]
 
 
 /* Common data. */
@@ -2382,6 +2388,23 @@ lincob(const INTEGER n,
 }
 
 
+/* Yields the number of reals needed by the workspace. */
+static INTEGER
+realworkspace(INTEGER n, INTEGER npt, INTEGER m)
+{
+  return (max(max(m+3*n, 2*m+n), 2*npt) + m*(2 + n) +
+          npt*(4 + n + npt) + n*(8 + 3*n));
+}
+
+size_t
+lincoa_storage(INTEGER n, INTEGER npt, INTEGER m)
+{
+  size_t nr = realworkspace(n, npt, m);
+  size_t ni = n;
+  return roundup(nr*sizeof(REAL), sizeof(INTEGER)) + ni*sizeof(INTEGER);
+}
+
+
 /*
  * This subroutine seeks the least value of a function of many variables,
  *   subject to general linear inequality constraints, by a trust region
@@ -2452,12 +2475,10 @@ lincoa(const INTEGER n,
        const REAL rhoend,
        const INTEGER iprint,
        const INTEGER maxfun,
-       REAL w[])
+       void* ws)
 {
   REAL smallx, sum, temp;
-  INTEGER i, j, ib, np, iw, iac, irc, igo, iqf, irf, ihq, ixb, ifv, ipq,
-    isp, ixn, ixo, ixp, ixs, istp, ipqw, iflag, iamat, ibmat, izmat,
-    ndim, nptm;
+  INTEGER i, j, np, iflag, nptm;
 
   /* Check that N, NPT and MAXFUN are acceptable. */
   smallx = rhoend*1e-6;
@@ -2478,73 +2499,75 @@ lincoa(const INTEGER n,
     return;
   }
 
-  /* Normalize the constraints, and copy the resultant constraint matrix
-   *   and right hand sides into working space, after increasing the right
-   *   hand sides if necessary so that the starting point is feasible. */
-  iamat = max(max(m + 3*n, 2*m + n), 2*npt) + 1;
-  ib = iamat + m*n;
-  iflag = 0;
-  if (m > 0) {
-    iw = iamat - 1;
-    for (j = 1; j <= m; ++j) {
-      sum = ZERO;
-      temp = ZERO;
-      for (i = 1; i <= n; ++i) {
-        sum += A(i,j)*X(i);
-        temp += pow2(A(i,j));
-      }
-      if (temp == ZERO) {
-        fputs("Return from LINCOA because the gradient "
-              "of a constraint is zero.\n", stderr);
-        return;
-      }
-      temp = sqrt(temp);
-      if (sum - B(j) > smallx*temp) {
-        iflag = 1;
-      }
-      W(ib+j-1) = max(B(j), sum)/temp;
-      for (i = 1; i <= n; ++i) {
-        ++iw;
-        W(iw) = A(i,j)/temp;
+
+  {
+    /* Partition the working space array, so that different parts of it
+     *   can be treated separately by the subroutine that performs the
+     *   main calculation. */
+    INTEGER ndim = npt + n;
+    size_t nr = realworkspace(n, npt, m);
+    REAL* w = (REAL*)ws;
+    REAL* amat = &w[max(max(m + 3*n, 2*m + n), 2*npt)];
+    REAL* wb = &amat[m*n];
+    REAL* xbase = &wb[m];
+    REAL* xpt = &xbase[n];
+    REAL* fval = &xpt[npt*n];
+    REAL* xsav = &fval[npt];
+    REAL* xopt = &xsav[n];
+    REAL* gopt = &xopt[n];
+    REAL* hq = &gopt[n];
+    REAL* pq = &hq[n*np/2];
+    REAL* bmat = &pq[npt];
+    REAL* zmat = &bmat[ndim*n];
+    REAL* step = &zmat[npt*nptm];
+    REAL* sp = &step[n];
+    REAL* xnew = &sp[npt + npt];
+    REAL* rescon = &xnew[n];
+    REAL* qfac = &rescon[m];
+    REAL* rfac = &qfac[n*n];
+    REAL* pqw = &rfac[n*np/2];
+    INTEGER* iact = (INTEGER*)((char*)ws + roundup(nr*sizeof(REAL),
+                                                   sizeof(INTEGER)));
+
+    /* Normalize the constraints, and copy the resultant constraint matrix
+     *   and right hand sides into working space, after increasing the right
+     *   hand sides if necessary so that the starting point is feasible. */
+    iflag = 0;
+    if (m > 0) {
+      for (j = 1; j <= m; ++j) {
+        sum = ZERO;
+        temp = ZERO;
+        for (i = 1; i <= n; ++i) {
+          sum += A(i,j)*X(i);
+          temp += pow2(A(i,j));
+        }
+        if (temp == ZERO) {
+          fputs("Return from LINCOA because the gradient "
+                "of a constraint is zero.\n", stderr);
+          return;
+        }
+        temp = sqrt(temp);
+        if (sum - B(j) > smallx*temp) {
+          iflag = 1;
+        }
+        WB(j) = max(B(j), sum)/temp;
+        for (i = 1; i <= n; ++i) {
+          AMAT(i,j) = A(i,j)/temp;
+        }
       }
     }
-  }
-  if (iflag == 1) {
-    if (iprint > 0) {
-      fputs("LINCOA has made the initial X feasible "
-            "by increasing part(s) of B.\n", stderr);
+    if (iflag == 1) {
+      if (iprint > 0) {
+        fputs("LINCOA has made the initial X feasible "
+              "by increasing part(s) of B.\n", stderr);
+      }
     }
+
+    /* The above settings provide a partition of W for subroutine LINCOB. */
+    lincob(n, npt, m, amat, wb, x, rhobeg, rhoend, iprint, maxfun, xbase,
+           xpt, fval, xsav, xopt, gopt, hq, pq, bmat, zmat, ndim, step,
+           sp, xnew, iact, rescon, qfac, rfac, pqw, w);
   }
-
-  /* Partition the working space array, so that different parts of it
-   *   can be treated separately by the subroutine that performs the
-   *   main calculation. */
-  ndim = npt + n;
-  ixb = ib + m;
-  ixp = ixb + n;
-  ifv = ixp + n*npt;
-  ixs = ifv + npt;
-  ixo = ixs + n;
-  igo = ixo + n;
-  ihq = igo + n;
-  ipq = ihq + n*np/2;
-  ibmat = ipq + npt;
-  izmat = ibmat + ndim*n;
-  istp = izmat + npt*nptm;
-  isp = istp + n;
-  ixn = isp + npt + npt;
-  iac = ixn + n;
-  irc = iac + n;
-  iqf = irc + m;
-  irf = iqf + n*n;
-  ipqw = irf + n*np/2;
-
-  /* The above settings provide a partition of W for subroutine LINCOB. */
-  lincob(n, npt, m, &W(iamat), &W(ib), &X(1), rhobeg, rhoend, iprint,
-         maxfun, &W(ixb), &W(ixp), &W(ifv), &W(ixs), &W(ixo), &W(igo),
-         &W(ihq), &W(ipq), &W(ibmat), &W(izmat), ndim, &W(istp),
-         &W(isp), &W(ixn), (INTEGER*)&W(iac), &W(irc), &W(iqf),
-         &W(irf), &W(ipqw), &W(1));
 }
 
 
@@ -2575,22 +2598,24 @@ int main(int argc, char* argv[])
 {
   /* Set some constants. */
   const REAL two = 2.0;
-  const INTEGER ia = 12;
   const INTEGER n = 12;
+  const INTEGER ia = n;
   const INTEGER np = 50;
+  const INTEGER m = 4*np;
 
   /* Local variables */
-  REAL a[2400], b[200];
+  REAL a[ia*m], b[m], x[n];
   REAL rhobeg, rhoend;
-  REAL ss, xp[50], yp[50], zp[50], xs, ys, zs;
+  REAL ss, xp[np], yp[np], zp[np], xs, ys, zs;
   REAL theta, temp;
   REAL sumx, sumy, sumz;
-  REAL w[500000], x[12];
-  INTEGER i, j, k, m;
+  void* ws;
+  INTEGER i, j, k;
   INTEGER jcase;
   INTEGER maxfun, iprint;
   INTEGER iw;
   INTEGER npt;
+  size_t nbytes;
 
   /* Set the data points. */
   sumx = ZERO;
@@ -2615,7 +2640,6 @@ int main(int argc, char* argv[])
   }
 
   /* Set the linear constraints. */
-  m = 4*np;
   for (k = 1; k <= m; ++k) {
     B(k) = ONE;
     for (i = 1; i <= n; ++i) {
@@ -2657,9 +2681,18 @@ int main(int argc, char* argv[])
     X(11) = ONE/ss;
     X(12) = ONE/ss;
 
+    /* Choose number of points and allocate workspace. */
+    npt = jcase*5 + 10;
+    nbytes = lincoa_storage(n, m, npt);
+    ws = malloc(nbytes);
+    if (ws == NULL) {
+      fprintf(stderr, "cannot allocate %ld bytes for workspace\n",
+              (long)nbytes);
+      return 1;
+    }
+
     /* Call of LINCOA, which provides the printing given at the end of this
      *   note. */
-    npt = jcase*5 + 10;
     rhobeg = 1.0;
     rhoend = 1e-6;
     iprint = 1;
@@ -2667,7 +2700,12 @@ int main(int argc, char* argv[])
     fprintf(OUTPUT,
           "\n\n    Output from LINCOA with  NPT =%4ld  and  RHOEND =%12.4E\n",
           (long)npt, (double)rhoend);
-    lincoa(n, npt, m, a, ia, b, x, rhobeg, rhoend, iprint, maxfun, w);
+    lincoa(n, npt, m, a, ia, b, x, rhobeg, rhoend, iprint, maxfun, ws);
+
+    /* Free workspace. */
+    free(ws);
   }
+
+  /* Return. */
   return 0;
 }
