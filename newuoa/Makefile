@@ -16,7 +16,7 @@ LDFLAGS =
 AR = ar
 ARFLAGS = rv
 
-# Set the following to true/false depending whetehr your terminal does support
+# Set the following to true/false depending whether your terminal does support
 # ANSI colors.
 COLOR = true
 
