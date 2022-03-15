@@ -18,7 +18,7 @@ constraints on the variables.  The algorithm is described in:
 > vol. 275 (eds. Susana Gomez and Jean-Pierre Hennart), Kluwer Academic
 > Publishers, pp. 51-67 (1994).
 
-A [Yorick](http://yorick.github.com/) interface is also provided in
+A [Yorick](http://github.com/LLNL/yorick/) interface is also provided in
 directory [`cobyla/yorick`](./cobyla/yorick).
 
 
@@ -41,7 +41,7 @@ more efficient than COBYLA (which exploits a more simple linear model but
 implements arbitrary inequality constraints while NEWUOA is unconstrained).
 If you have bound constraints, you may consider using BOBYQA instead.
 
-A [Yorick](http://yorick.github.com/) interface is also provided in
+A [Yorick](http://github.com/LLNL/yorick/) interface is also provided in
 directory [`newuoa/yorick`](./newuoa/yorick).
 
 

@@ -2,7 +2,7 @@ C wrapper and Yorick plugin for L-BFGS-B
 ========================================
 
 This package provides wrapper code to use L-BFGS-B algorithm in your C or
-[Yorick](http://yorick.github.com/) code.
+[Yorick](http://github.com/LLNL/yorick/) code.
 
 Directory [lbfgsb-3.0](./lbfgsb-3.0) contains original code of L-BFGS-B algorithm
 (version 3.0) by R.  H. Byrd, P. Lu, J.  Nocedal and C. Zhu (see ref. [1]
@@ -52,7 +52,7 @@ in your code.
 
 More detailled explanations are given below.
 
-0. You must have [Yorick](http://yorick.github.com/) installed on your
+0. You must have [Yorick](http://github.com/LLNL/yorick/) installed on your
    machine.
 
 1. Unpack the plug-in code somewhere.

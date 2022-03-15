@@ -1,6 +1,6 @@
 # Yorick support for COBYLA
 
-This directory contains a [Yorick](http://yorick.github.com/) interface to
+This directory contains a [Yorick](http://github.com/LLNL/yorick/) interface to
 Mike Powell's COBYLA method.
 
 
